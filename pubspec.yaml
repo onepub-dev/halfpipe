@@ -1,0 +1,9 @@
+name: halfpipe
+version: 0.0.1
+description: A halfpipe command-line application created by dcli
+environment: 
+  sdk: '>=2.16.0 <3.0.0'
+dependencies: 
+  dcli: 1.31.2
+dev_dependencies: 
+  lint_hard: ^1.0.0
