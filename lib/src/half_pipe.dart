@@ -59,25 +59,80 @@ pipeline((stdin)
 ```
 */
 
-void main() {
+void main() async {
   print('start');
-  Pipeline()
-    ..run('ls')
-    ..transform(zlib.decoder)
-    ..block((stdin, stdout, stderr) async {
-      await for (var line in stdin) {
-        print('st: $line');
-      }
-      print('hi');
-      printerr('ho');
-    })
+  HalfPipe().run('ls').transform(Transform.line)
+      // .transform<String>(utf8.decoder)
+      // .transform<String>(const LineSplitter())
+      .block((stdin, stdout, stderr) async {
+    await for (var line in stdin) {
+      print('st: $line');
+    }
+    print('hi');
+    printerr('ho');
+  })
     ..redirect(Pipeline.errToOut)
     ..block((stdin, _, __) async {
       await for (var line in stdin) {
         print('2nd: $line');
       }
     });
+
+  HalfPipe().stdin() // take input from stdin
+        ..transform(zlib.decoder) // provides a stream of file entities
+        ..save(pathToTempFolder) // not certain how this works.
+      ;
+
+    HalfPipe()..run('docker image ls')
+    .expect(0)
+    .orExpect(1)
+    .orExpect(2)
+    .onError((exitCode, Stream<int> error));
+
+  HalfPipe()
+    .readFile(pathToFile)
+    .transform(Transform.line)
+    .tee(otherHalfPipe)
+    .toList();
+
+  Cluster()
+    ..start(halfPipe)
+    ..start(halfPipe2)
+    ..run('ls');
+    ..progress([ProgressBar(), ProgressBar(indefinite:true)]);
+
+
+
+  HalfPipe()
+    ..readFile(pathToFile)
+    ..transform(Transform.line)
+    ..toList();
+
+  HalfPipe()
+    ..readFile(pathToFile)
+    ..transform(Transform.line)
+    ..take(5) // or head
+    ..toList();
+
+  HalfPipe()
+    ..readFile(pathToFile)
+    ..transform(Transform.line)
+    ..tail(5)
+    ..toList();
+
+  HalfPipe()
+    ..readFile(pathToFile)
+    ..transform(Transform.line)
+    ..tail(5)
+    ..toParagraph();
+
   print('end');
+
+  Stream<List<int>> content = File('someFile.txt').openRead();
+  List<String> lines = await content
+      .transform(utf8.decoder)
+      .transform(const LineSplitter())
+      .toList();
 }
 
 // Future<void> Function(Stream<int>, Stream<int>?, Stream<int>?)
@@ -86,10 +141,55 @@ void main() {
 typedef BlockCallback = Future<void> Function(Stream<List<int>> stdin,
     StreamSink<List<int>>? stdout, StreamSink<List<int>>? stderr);
 
-class Pipeline {
-  Pipeline() {
+class Middleware<T> {
+  Middleware(this.owner);
+  HalfPipe owner;
+
+  Stream<S> transform<S>(StreamTransformer<T, S> streamTransformer) {
+    return streamTransformer.bind(this);
+  }
+
+  Middleware<R> transform<R>(StreamTransformer<T, R> streamTransformer) {
+    return streamTransformer.bind(owner.stdoutController.stream);
+    owner.stdoutController.stream.transform<R>(converter);
+
+    return Middleware.copy(this);
+  }
+
+  Future<Stream<List<T>>> _pipe() {}
+
+  Middleware.copy(Middleware other) : this.owner = other.owner;
+}
+
+class Run extends Middleware<int> {
+  Run(this.cmd, super.owner);
+
+  String cmd;
+  @override
+  Future<Stream<List<int>>> pipe() async {
+    final _fProcess = await Process.start(
+      cmd,
+      [],
+      workingDirectory: pwd,
+    );
+    await _fProcess.stdout.pipe(stdout);
+    await _fProcess.stderr.pipe(stderr);
+    return _fProcess.stdout;
+  }
+}
+
+class HalfPipe {
+  List<Middleware> processors = <Middleware>[];
+
+  HalfPipe() {
     stdout = stdoutController.sink;
     stderr = stderrController.sink;
+  }
+
+  Middleware<int> run(String cmd) {
+    final processor = Run(cmd, this);
+    processors.add(processor);
+    return processor;
   }
 
   late final stdoutController = StreamController<List<int>>();
@@ -106,16 +206,6 @@ class Pipeline {
     stderr.close();
   }
 
-  Future<void> run(String cmd) async {
-    final _fProcess = await Process.start(
-      cmd,
-      [],
-      workingDirectory: pwd,
-    );
-    await _fProcess.stdout.pipe(stdout);
-    await _fProcess.stderr.pipe(stderr);
-  }
-
   // ignore: prefer_void_to_null
   void block(BlockCallback action) {
     runZonedGuarded(
@@ -123,10 +213,6 @@ class Pipeline {
         zoneSpecification: ZoneSpecification(print: (self, parent, zone, line) {
       stdout.add(line.codeUnits);
     }));
-  }
-
-  void transform(Converter<List<int>, List<int>> converter) {
-    stdoutController.stream.transform(converter);
   }
 
   void redirect(int action) {}
