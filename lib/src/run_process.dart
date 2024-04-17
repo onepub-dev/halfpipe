@@ -1,8 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:dcli_core/dcli_core.dart';
-import 'package:dcli_filesystem/dcli_filesystem.dart';
+import 'package:dcli_core/dcli_core.dart' hide RunException;
 
 import '../halfpipe.dart';
 import 'process_helper.dart';
@@ -24,7 +23,7 @@ class RunProcess {
       mode = ProcessStartMode.inheritStdio;
     }
 
-    var _parsed = halfPipe.parse();
+    final _parsed = halfPipe.parse();
 
     if (Settings().isWindows && halfPipe.extensionSearch) {
       _parsed.cmd = await searchForCommandExtension(

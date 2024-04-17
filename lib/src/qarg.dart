@@ -5,7 +5,7 @@ import 'package:file/local.dart';
 import 'package:glob/glob.dart';
 import 'package:path/path.dart';
 
-/// TODO: consider replacing with code from the dart sdk:
+// TODO(bsutton): consider replacing with code from the dart sdk:
 /// https://github.com/dart-lang/io/blob/master/lib/src/shell_words.dart
 class QArg {
   QArg(String iarg) {

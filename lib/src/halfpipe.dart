@@ -1,10 +1,14 @@
+// ignore_for_file: avoid_setters_without_getters, one_member_abstracts
+
 import 'dart:async';
 import 'dart:convert';
-import 'dart:core';
 import 'dart:core' as core;
+import 'dart:core';
 import 'dart:io';
 
-import 'package:dcli_common/dcli_common.dart' as common;
+// import 'package:dcli_common/dcli_common.dart' as common;
+
+import 'package:dcli/dcli.dart';
 
 import 'parse_cli_command.dart';
 import 'run_process.dart';
@@ -12,6 +16,19 @@ import 'run_process.dart';
 enum ArgMethod { command, commandAndArgs, commandAndList }
 
 class HalfPipe implements HalfPipeHasCommand {
+  HalfPipe._command(String command) : argMethod = ArgMethod.command;
+
+  HalfPipe._commandAndArgList(String command, List<String> args)
+      : argMethod = ArgMethod.commandAndList;
+
+  HalfPipe._commandAndArgs(String commandAndArgs)
+      : argMethod = ArgMethod.commandAndArgs {
+    _commandAndArgs = commandAndArgs;
+  }
+  Completer _stderrFlushed;
+  Completer _stdoutFlushed;
+  Progress progress = Progress.capture;
+
 // class HalfPipeBuilder implements HelpPipeHasCommand {
   String? _command;
   final List<String> _argList = <String>[];
@@ -28,28 +45,15 @@ class HalfPipe implements HalfPipeHasCommand {
   bool extensionSearch = true;
   bool nothrow = true;
 
-  HalfPipe._command(String command) : argMethod = ArgMethod.command;
-
-  HalfPipe._commandAndArgList(String command, List<String> args)
-      : argMethod = ArgMethod.commandAndList;
-
-  HalfPipe._commandAndArgs(String commandAndArgs)
-      : argMethod = ArgMethod.commandAndArgs {
-    _commandAndArgs = commandAndArgs;
-  }
-
-  static HalfPipeHasCommand command(String command) {
-    return HalfPipe._command(command);
-  }
+  static HalfPipeHasCommand command(String command) =>
+      HalfPipe._command(command);
 
   static HalfPipeHasCommand commandAndArgList(
-      String command, List<String> args) {
-    return HalfPipe._commandAndArgList(command, args);
-  }
+          String command, List<String> args) =>
+      HalfPipe._commandAndArgList(command, args);
 
-  static HalfPipeHasCommand commandAndArgs(String commandAndArgs) {
-    return HalfPipe._commandAndArgs(commandAndArgs);
-  }
+  static HalfPipeHasCommand commandAndArgs(String commandAndArgs) =>
+      HalfPipe._commandAndArgs(commandAndArgs);
 
   @override
   void addArgList(List<String> args) {
@@ -66,16 +70,14 @@ class HalfPipe implements HalfPipeHasCommand {
     process.stdout
         .transform(utf8.decoder)
         .transform(const LineSplitter())
-        .listen((line) {
-      progress.addToStdout(line);
-    }).onDone(() {
+        .listen(progress.addToStdout)
+        .onDone(() {
       _stdoutFlushed.complete();
-      _stdoutCompleter.complete(true);
     });
   }
 
-  void _start() {
-    final process = RunProcess().start(this);
+  Future<void> _start() async {
+    await RunProcess().start(halfPipe: this);
   }
 
   @override
@@ -97,23 +99,17 @@ class HalfPipe implements HalfPipeHasCommand {
 
   @override
   Future<void> print() async {
-    await stdout.forEach((line) {
-      core.print(line);
-    });
+    await stdout.forEach(core.print);
   }
 
   @override
   Future<void> printerr() async {
-    await stdout.forEach((line) {
-      common.printerr(line);
-    });
+    await stdout.forEach(common.printerr);
   }
 
   @override
   Future<void> printmix() async {
-    await stdmix.forEach((line) {
-      core.print(line);
-    });
+    await stdmix.forEach(core.print);
   }
 
   @override
@@ -146,22 +142,18 @@ class HalfPipe implements HalfPipeHasCommand {
     process.stdout
         .transform(utf8.decoder)
         .transform(const LineSplitter())
-        .listen((line) {
-      progress.addToStdout(line);
-    }).onDone(() {
+        .listen(progress.printStdOut)
+        .onDone(() {
       _stdoutFlushed.complete();
-      _stdoutCompleter.complete(true);
     });
 
     // handle stderr stream
     process.stderr
         .transform(utf8.decoder)
         .transform(const LineSplitter())
-        .listen((line) {
-      progress.addToStderr(line);
-    }).onDone(() {
+        .listen(progress.printStdErr)
+        .onDone(() {
       _stderrFlushed.complete();
-      _stderrCompleter.complete(true);
     });
   }
 }

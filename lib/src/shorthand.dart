@@ -1,7 +1,6 @@
-import 'dart:io';
+import 'package:dcli_core/dcli_core.dart';
 
 import '../halfpipe.dart';
-import 'platform.dart';
 
 /// Typedef for LineActions
 typedef LineAction = void Function(String line);
@@ -14,7 +13,7 @@ void _noOpAction(String line) {}
 extension StringAsProcess on String {
   /// run
   Future<void> get run async {
-    HalfPipe.commandAndArgs(this).print();
+    await HalfPipe.commandAndArgs(this).print();
   }
 
   /// start
@@ -25,18 +24,17 @@ extension StringAsProcess on String {
     bool terminal = false,
     bool nothrow = false,
     bool extensionSearch = true,
-  }) {
-    return HalfPipe.commandAndArgs(this)
-      ..workingDirectory = workingDirectory
-      ..runInShell = runInShell
-      ..detached = detached
-      ..terminal = terminal
-      ..nothrow = nothrow
-      ..extensionSearch = extensionSearch;
-  }
+  }) =>
+      HalfPipe.commandAndArgs(this)
+        ..workingDirectory = workingDirectory
+        ..runInShell = runInShell
+        ..detached = detached
+        ..terminal = terminal
+        ..nothrow = nothrow
+        ..extensionSearch = extensionSearch;
 
   /// foreach
-  void forEach(
+  Future<void> forEach(
     LineAction stdout, {
     LineAction stderr = _noOpAction,
     String? workingDirectory,
@@ -45,19 +43,19 @@ extension StringAsProcess on String {
     bool terminal = false,
     bool nothrow = false,
     bool extensionSearch = true,
-  }) {
-    HalfPipe.commandAndArgs(this)
+  }) async {
+    final pipe = HalfPipe.commandAndArgs(this)
       ..workingDirectory = workingDirectory
       ..runInShell = runInShell
       ..detached = detached
       ..terminal = terminal
       ..nothrow = nothrow
-      ..extensionSearch = extensionSearch
-      ..stdout.forEach((line) => stdout(line))
-      ..stderr.forEach((line) => stderr(line));
+      ..extensionSearch = extensionSearch;
+    await pipe.stdout.forEach((line) => stdout(line));
+    await pipe.stderr.forEach((line) => stderr(line));
   }
 
-  List<String> toList(
+  Future<List<String>> toList(
     String commandAndArgs, {
     int skipLines = 0,
     String? workingDirectory,
@@ -66,22 +64,23 @@ extension StringAsProcess on String {
     bool terminal = false,
     bool nothrow = false,
     bool extensionSearch = true,
-  }) {
-    var lines = <String>[];
+  }) async {
+    final lines = <String>[];
 
-    HalfPipe.commandAndArgs(commandAndArgs)
+    final pipe = HalfPipe.commandAndArgs(commandAndArgs)
       ..runInShell = runInShell
       ..detached = detached
       ..terminal = terminal
       ..nothrow = nothrow
       ..workingDirectory = workingDirectory
-      ..extensionSearch = extensionSearch
-      ..stdmix.forEach((line) => lines.add(line));
+      ..extensionSearch = extensionSearch;
+
+    await pipe.stdmix.forEach(lines.add);
 
     return lines.sublist(skipLines);
   }
 
-  String toParagraph({
+  Future<String> toParagraph({
     int skipLines = 0,
     String? workingDirectory,
     bool runInShell = false,
@@ -89,8 +88,8 @@ extension StringAsProcess on String {
     bool terminal = false,
     bool nothrow = false,
     bool extensionSearch = true,
-  }) =>
-      toList(
+  }) async =>
+      (await toList(
         this,
         runInShell: runInShell,
         detached: detached,
@@ -98,10 +97,11 @@ extension StringAsProcess on String {
         nothrow: nothrow,
         workingDirectory: workingDirectory,
         extensionSearch: extensionSearch,
-      ).join(Platform().eol);
+      ))
+          .join(eol);
 
-  String? get firstLine {
-    final lines = toList(this);
+  Future<String?> get firstLine async {
+    final lines = await toList(this);
 
     String? line;
     if (lines.isNotEmpty) {

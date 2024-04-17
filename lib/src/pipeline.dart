@@ -59,27 +59,6 @@ pipeline((stdin)
 ```
 */
 
-void main() {
-  print('start');
-  Pipeline()
-    ..run('ls')
-    ..transform(zlib.decoder)
-    ..block((stdin, stdout, stderr) async {
-      await for (var line in stdin) {
-        print('st: $line');
-      }
-      print('hi');
-      printerr('ho');
-    })
-    ..redirect(Pipeline.errToOut)
-    ..block((stdin, _, __) async {
-      await for (var line in stdin) {
-        print('2nd: $line');
-      }
-    });
-  print('end');
-}
-
 // Future<void> Function(Stream<int>, Stream<int>?, Stream<int>?)
 // Future<void> Function(Stream<int>, [Stream<int>?, Stream<int>?])
 
@@ -98,12 +77,12 @@ class Pipeline {
   late final stderrController = StreamController<List<int>>();
   late final StreamSink<List<int>> stderr;
 
-  void close() {
-    stdoutController.close();
-    stderrController.close();
+  Future<void> close() async {
+    await stdoutController.close();
+    await stderrController.close();
 
-    stdout.close();
-    stderr.close();
+    await stdout.close();
+    await stderr.close();
   }
 
   Future<void> run(String cmd) async {
@@ -117,8 +96,8 @@ class Pipeline {
   }
 
   // ignore: prefer_void_to_null
-  void block(BlockCallback action) {
-    runZonedGuarded(
+  Future<void> process(BlockCallback action) async {
+    await runZonedGuarded(
         () => action(stdoutController.stream, stdout, stderr), (e, st) {},
         zoneSpecification: ZoneSpecification(print: (self, parent, zone, line) {
       stdout.add(line.codeUnits);
@@ -140,4 +119,3 @@ class Pipeline {
 
 // void pipeline(List<int?> list) {
 // }
-

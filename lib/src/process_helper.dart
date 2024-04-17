@@ -1,5 +1,4 @@
 import 'package:dcli_core/dcli_core.dart';
-import 'package:dcli_filesystem/dcli_filesystem.dart';
 import 'package:path/path.dart';
 
 Future<String> searchForCommandExtension(
@@ -18,7 +17,7 @@ Future<String> searchForCommandExtension(
   }
 
   // just the cmd so run which with searchExtension.
-  var whichResult = await which(cmd);
+  final whichResult = which(cmd);
   return basename(whichResult.path ?? cmd);
 }
 

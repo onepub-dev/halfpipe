@@ -6,7 +6,7 @@
 
 import 'dart:io';
 
-import 'package:dcli_common/dcli_common.dart';
+import 'package:dcli_core/dcli_core.dart';
 
 /// Extensions for the Platform class
 extension PlatformEx on Platform {

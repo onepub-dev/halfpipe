@@ -4,7 +4,7 @@
  * Written by Brett Sutton <bsutton@onepub.dev>, Jan 2022
  */
 
-import 'package:dcli_common/dcli_common.dart';
+import 'package:dcli_core/dcli_core.dart';
 import 'package:stack_trace/stack_trace.dart';
 
 /// Thrown when any of the process related method

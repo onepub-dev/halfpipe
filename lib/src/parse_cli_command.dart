@@ -4,11 +4,10 @@
  * Written by Brett Sutton <bsutton@onepub.dev>, Jan 2022
  */
 
-import 'package:dcli_core/dcli_core.dart';
-import 'package:dcli_filesystem/dcli_filesystem.dart';
-import 'package:halfpipe/src/run_exception.dart';
+import 'package:dcli_core/dcli_core.dart' hide RunException;
 
 import 'qarg.dart';
+import 'run_exception.dart';
 
 /// Class to parse a OS command, contained in a string, which we need to pass
 /// into the dart Process.start method as a application name and a series
@@ -327,8 +326,7 @@ class _ParseFrame {
   int offset;
 
   @override
-  String toString() =>
-      '${EnumHelper().getName(state)} offset: $offset quote: $matchingQuote';
+  String toString() => '${state.name} offset: $offset quote: $matchingQuote';
 
   /// Returns true if a quote is already on the stack.
   static bool isQuoteActive(StackList<_ParseFrame> stack) {
