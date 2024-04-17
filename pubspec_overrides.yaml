@@ -1,0 +1,7 @@
+dependency_overrides:
+  dcli_core:
+    path: ../dcli/dcli_core
+  dcli_common:
+    path: ../dcli/dcli_common
+  dcli_filesystem:
+    path: ../dcli/dcli_filesystem    
