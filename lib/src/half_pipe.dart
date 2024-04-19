@@ -1,11 +1,6 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
-
-import 'package:dcli/dcli.dart';
 
 import 'middleware.dart';
-import 'pipeline.dart';
 import 'run.dart';
 /*
 
@@ -70,7 +65,6 @@ typedef BlockCallback = Future<void> Function(Stream<List<int>> stdin,
     StreamSink<List<int>>? stdout, StreamSink<List<int>>? stderr);
 
 class HalfPipe {
-
   HalfPipe() {
     stdout = stdoutController.sink;
     stderr = stderrController.sink;
@@ -98,7 +92,7 @@ class HalfPipe {
   }
 
   // ignore: prefer_void_to_null
-  void block(BlockCallback action) {
+  void process(BlockCallback action) {
     runZonedGuarded(
         () => action(stdoutController.stream, stdout, stderr), (e, st) {},
         zoneSpecification: ZoneSpecification(print: (self, parent, zone, line) {

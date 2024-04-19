@@ -1,6 +1,7 @@
 import 'package:dcli_core/dcli_core.dart';
 
 import '../halfpipe.dart';
+import 'half_pipe_has_command.dart';
 
 /// Typedef for LineActions
 typedef LineAction = void Function(String line);

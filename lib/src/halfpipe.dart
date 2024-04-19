@@ -10,6 +10,8 @@ import 'dart:io';
 
 import 'package:dcli/dcli.dart';
 
+import 'half_pipe_has_command.dart';
+import 'half_pipe_stream.dart';
 import 'parse_cli_command.dart';
 import 'run_process.dart';
 
@@ -25,9 +27,8 @@ class HalfPipe implements HalfPipeHasCommand {
       : argMethod = ArgMethod.commandAndArgs {
     _commandAndArgs = commandAndArgs;
   }
-  Completer _stderrFlushed;
-  Completer _stdoutFlushed;
-  Progress progress = Progress.capture;
+  final _stderrFlushed = Completer<bool>();
+  final _stdoutFlushed = Completer<bool>();
 
 // class HalfPipeBuilder implements HelpPipeHasCommand {
   String? _command;
@@ -71,9 +72,7 @@ class HalfPipe implements HalfPipeHasCommand {
         .transform(utf8.decoder)
         .transform(const LineSplitter())
         .listen(progress.addToStdout)
-        .onDone(() {
-      _stdoutFlushed.complete();
-    });
+        .onDone(_stdoutFlushed.complete);
   }
 
   Future<void> _start() async {
@@ -143,59 +142,13 @@ class HalfPipe implements HalfPipeHasCommand {
         .transform(utf8.decoder)
         .transform(const LineSplitter())
         .listen(progress.printStdOut)
-        .onDone(() {
-      _stdoutFlushed.complete();
-    });
+        .onDone(_stdoutFlushed.complete);
 
     // handle stderr stream
     process.stderr
         .transform(utf8.decoder)
         .transform(const LineSplitter())
         .listen(progress.printStdErr)
-        .onDone(() {
-      _stderrFlushed.complete();
-    });
+        .onDone(_stderrFlushed.complete);
   }
-}
-
-abstract class HalfPipeHasCommand implements HalfPipeStream {
-  set workingDirectory(String? workingDirectory) {}
-
-  set extensionSearch(bool extensionSearch) {}
-
-  set terminal(bool terminal) {}
-
-  set runInShell(bool runInShell) {}
-
-  set detached(bool detached) {}
-
-  set nothrow(bool nothrow) {}
-
-  void addArgs(String args);
-
-  void addArgList(List<String> args);
-
-  Future<int> exitCode();
-}
-
-abstract class HalfPipeHasArgs {
-  void addArgs(String args);
-}
-
-abstract class HalfPipeHasArgList {
-  void addArgsList(List<String> args);
-}
-
-abstract class HalfPipeStream {
-  Stream<String> get stdout async* {}
-  Stream<String> get stderr async* {}
-  Stream<String> get stdmix async* {}
-
-  Stream<List<int>> stdoutAsInt() async* {}
-  Stream<List<int>> stderrAsInt() async* {}
-  Stream<List<int>> stdmixAsInt() async* {}
-
-  Future<void> print();
-  Future<void> printerr();
-  Future<void> printmix();
 }
