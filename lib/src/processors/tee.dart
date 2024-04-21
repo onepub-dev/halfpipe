@@ -19,7 +19,7 @@ class Tee<T> extends Processor<T> {
       StreamSink<List<T>> sinkOut, StreamSink<List<T>> sinkErr) async {
     srcIn.listen((line) {
       stdout.writeln(line);
-      injector.srcInController.sink.add(line);
+      injector.srcOutController.sink.add(line);
     });
 
     srcErr.listen((line) {

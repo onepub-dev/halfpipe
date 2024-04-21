@@ -4,8 +4,8 @@ import 'dart:async';
 
 abstract class PipeSection<I, O> {
   PipeSection() {
-    sinkOut = sinkOutController.sink;
-    sinkErr = sinkErrController.sink;
+    // sinkOut = sinkOutController.sink;
+    // sinkErr = sinkErrController.sink;
   }
 
   /// Runs the defined action passing in data from the previous [PipeSection]
@@ -20,30 +20,30 @@ abstract class PipeSection<I, O> {
   /// Each PipeSection is wired to the next and previous [PipeSection]
   /// via streams.
 
-  /// input from the prior pipe-section
-  late final srcInController = StreamController<List<I>>();
-  late final StreamSubscription<List<I>> srcIn;
+  // /// input from the prior pipe-section
+  // late final srcInController = StreamController<List<I>>();
+  // late final StreamSubscription<List<I>> srcIn;
 
-  late final srcErrController = StreamController<List<I>>();
-  late final StreamSubscription<List<I>> srcErr;
+  // late final srcErrController = StreamController<List<I>>();
+  // late final StreamSubscription<List<I>> srcErr;
 
-  /// send data to stdout
-  late final sinkOutController = StreamController<List<O>>();
-  late final StreamSink<List<O>> sinkOut;
+  // /// send data to stdout
+  // late final sinkOutController = StreamController<List<O>>();
+  // late final StreamSink<List<O>> sinkOut;
 
-  /// send data to stderr
-  late final sinkErrController = StreamController<List<O>>();
-  late final StreamSink<List<O>> sinkErr;
+  // /// send data to stderr
+  // late final sinkErrController = StreamController<List<O>>();
+  // late final StreamSink<List<O>> sinkErr;
 
-  Future<void> close() async {
-    await srcInController.close();
-    await srcErrController.close();
+  // Future<void> close() async {
+  //   await srcInController.close();
+  //   await srcErrController.close();
 
-    await sinkOutController.close();
-    await sinkErrController.close();
+  //   await sinkOutController.close();
+  //   await sinkErrController.close();
 
-    await srcIn.cancel();
-    await sinkOut.close();
-    await sinkErr.close();
-  }
+  //   await srcIn.cancel();
+  //   await sinkOut.close();
+  //   await sinkErr.close();
+  // }
 }

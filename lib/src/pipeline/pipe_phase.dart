@@ -166,29 +166,29 @@ class PipePhase<T> {
   // and then run the pipeline.
   Future<void> run() async {
     final stdinController = StreamController<List<dynamic>>();
-    var priorSinkOut = stdinController;
+    var priorOutController = stdinController;
 
     stdin.listen((data) => stdinController.sink.add(data));
 
     /// The first section has no error inputs so wire in
     /// an empty stream.
-    var priorSinkErr = StreamController<List<dynamic>>();
-    final controllersToClose = <StreamController<List<dynamic>>>[];
+    var priorErrController = StreamController<List<dynamic>>();
+    // final controllersToClose = <StreamController<List<dynamic>>>[];
 
-    late StreamController<List<dynamic>> nextIn;
-    late StreamController<List<dynamic>> nextErr;
+    late StreamController<List<dynamic>> nextOutController;
+    late StreamController<List<dynamic>> nextErrController;
 
     for (var i = 0; i < sections.length; i++) {
       final section = sections[i];
 
       if (i < sections.length - 1) {
-        nextIn = sections[i + 1].srcInController;
-        nextErr = sections[i + 1].srcErrController;
+        nextOutController = StreamController<List<dynamic>>();
+        nextErrController = StreamController<List<dynamic>>();
       } else {
         // If we are on the last section then
         // wire it to the final output controllers
-        nextIn = sinkOutController;
-        nextErr = sinkErrController;
+        nextOutController = sinkOutController;
+        nextErrController = sinkErrController;
       }
       // ignore: close_sinks
       // final nextIn = StreamController<List<dynamic>>();
@@ -196,11 +196,11 @@ class PipePhase<T> {
       // final nextErr = StreamController<List<dynamic>>();
       // controllersToClose.addAll([nextIn, nextErr]);
 
-      await section.start(
-          priorSinkOut.stream, priorSinkErr.stream, nextIn.sink, nextErr.sink);
+      await section.start(priorOutController.stream, priorErrController.stream,
+          nextOutController.sink, nextErrController.sink);
 
-      priorSinkOut = section.sinkOutController;
-      priorSinkErr = section.sinkErrController;
+      priorOutController = nextOutController;
+      priorErrController = nextErrController;
 
       // priorSrcIn = nextIn.stream;
       // priorSrcErr = nextErr.stream;

@@ -17,8 +17,8 @@ void main() {
       touch('one.txt', create: true);
       touch('two.txt', create: true);
       // run ls
-      final list = await HalfPipe2().command('ls')
-      .toList();
+      final list =
+          await HalfPipe2().command('ls').transform(Transform.line).toList();
       expect(list.length, equals(2));
       expect(list.first, equals('one.txt'));
       expect(list.last, equals('two.txt'));
