@@ -1,18 +1,23 @@
 // ignore_for_file: avoid_returning_this
 
-import '../transformers/transformer.dart';
 import 'dart:async';
-import 'dart:io';
+import 'dart:convert';
+
 import 'pipe_section.dart';
 
-class TransformerPipeSection extends PipeSection {
+class TransformerPipeSection<I, O> extends PipeSection<I, O> {
   TransformerPipeSection(this.transformer);
 
-  Transformer transformer;
+  Converter<List<I>, List<O>> transformer;
 
   @override
-  Future<void> process(
-      Stream<List<String>> stdin, IOSink stdout, IOSink stderr) async {
-    transformer.process(stdin, stdout, stderr);
+  Future<void> start(Stream<List<I>> srcIn, Stream<List<I>> srcErr,
+      StreamSink<List<O>> sinkOut, StreamSink<List<O>> sinkErr) async {
+    srcIn.listen((data) {
+      sinkOut.add(transformer.convert(data));
+    });
+    srcErr.listen((data) {
+      sinkErr.add(transformer.convert(data));
+    });
   }
 }

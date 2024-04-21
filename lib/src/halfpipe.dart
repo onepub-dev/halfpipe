@@ -1,154 +1,135 @@
-// ignore_for_file: avoid_setters_without_getters, one_member_abstracts
+// // ignore_for_file: avoid_setters_without_getters, one_member_abstracts
 
-import 'dart:async';
-import 'dart:convert';
-import 'dart:core' as core;
-import 'dart:core';
-import 'dart:io';
+// import 'dart:async';
+// import 'dart:convert';
+// import 'dart:core' as core;
+// import 'dart:core';
+// import 'dart:io';
 
-// import 'package:dcli_common/dcli_common.dart' as common;
+// // import 'package:dcli_common/dcli_common.dart' as common;
 
-import 'package:dcli/dcli.dart';
+// import 'package:dcli/dcli.dart';
 
-import 'half_pipe_has_command.dart';
-import 'half_pipe_stream.dart';
-import 'parse_cli_command.dart';
-import 'run_process.dart';
+// import 'half_pipe_has_command.dart';
+// import 'half_pipe_stream.dart';
+// import 'parse_cli_command.dart';
+// import 'run_process.dart';
 
-enum ArgMethod { command, commandAndArgs, commandAndList }
 
-class HalfPipe implements HalfPipeHasCommand {
-  HalfPipe._command(String command) : argMethod = ArgMethod.command;
 
-  HalfPipe._commandAndArgList(String command, List<String> args)
-      : argMethod = ArgMethod.commandAndList;
+// class HalfPipe implements HalfPipeHasCommand {
+//   HalfPipe._command(String command) : argMethod = ArgMethod.command;
 
-  HalfPipe._commandAndArgs(String commandAndArgs)
-      : argMethod = ArgMethod.commandAndArgs {
-    _commandAndArgs = commandAndArgs;
-  }
-  final _stderrFlushed = Completer<bool>();
-  final _stdoutFlushed = Completer<bool>();
+//   HalfPipe._commandAndArgList(String command, List<String> args)
+//       : argMethod = ArgMethod.commandAndList;
 
-// class HalfPipeBuilder implements HelpPipeHasCommand {
-  String? _command;
-  final List<String> _argList = <String>[];
+//   HalfPipe._commandAndArgs(String commandAndArgs)
+//       : argMethod = ArgMethod.commandAndArgs {
+//     _commandAndArgs = commandAndArgs;
+//   }
+//   final _stderrFlushed = Completer<bool>();
+//   final _stdoutFlushed = Completer<bool>();
 
-  String? _commandAndArgs;
+// // class HalfPipeBuilder implements HelpPipeHasCommand {
+//   String? _command;
+//   final List<String> _argList = <String>[];
 
-  ArgMethod argMethod;
+//   String? _commandAndArgs;
 
-  String? workingDirectory;
+//   ArgMethod argMethod;
 
-  bool runInShell = false;
-  bool detached = false;
-  bool terminal = false;
-  bool extensionSearch = true;
-  bool nothrow = true;
+//   String? workingDirectory;
 
-  static HalfPipeHasCommand command(String command) =>
-      HalfPipe._command(command);
+//   bool runInShell = false;
+//   bool detached = false;
+//   bool terminal = false;
+//   bool extensionSearch = true;
+//   bool nothrow = true;
 
-  static HalfPipeHasCommand commandAndArgList(
-          String command, List<String> args) =>
-      HalfPipe._commandAndArgList(command, args);
+//   static HalfPipeHasCommand command(String command) =>
+//       HalfPipe._command(command);
 
-  static HalfPipeHasCommand commandAndArgs(String commandAndArgs) =>
-      HalfPipe._commandAndArgs(commandAndArgs);
+//   static HalfPipeHasCommand commandAndArgList(
+//           String command, List<String> args) =>
+//       HalfPipe._commandAndArgList(command, args);
 
-  @override
-  void addArgList(List<String> args) {
-    _argList.addAll(args);
-  }
+//   static HalfPipeHasCommand commandAndArgs(String commandAndArgs) =>
+//       HalfPipe._commandAndArgs(commandAndArgs);
 
-  @override
-  void addArgs(String args) {
-    _commandAndArgs = _commandAndArgs! + args;
-  }
+//   @override
+//   void addArgList(List<String> args) {
+//     _argList.addAll(args);
+//   }
 
-  @override
-  Stream<String> get stdout async* {
-    process.stdout
-        .transform(utf8.decoder)
-        .transform(const LineSplitter())
-        .listen(progress.addToStdout)
-        .onDone(_stdoutFlushed.complete);
-  }
+//   @override
+//   void addArgs(String args) {
+//     _commandAndArgs = _commandAndArgs! + args;
+//   }
 
-  Future<void> _start() async {
-    await RunProcess().start(halfPipe: this);
-  }
+//   @override
+//   Stream<String> get stdout async* {
+//     process.stdout
+//         .transform(utf8.decoder)
+//         .transform(const LineSplitter())
+//         .listen(progress.addToStdout)
+//         .onDone(_stdoutFlushed.complete);
+//   }
 
-  @override
-  Stream<String> get stderr {
-    throw UnimplementedError();
-  }
+//   Future<void> _start() async {
+//     await RunProcess().start(halfPipe: this);
+//   }
 
-  @override
-  Stream<String> get stdmix {
-    throw UnimplementedError();
-  }
+//   @override
+//   Stream<String> get stderr {
+//     throw UnimplementedError();
+//   }
 
-  @override
-  Stream<List<int>> stdoutAsInt() async* {}
-  @override
-  Stream<List<int>> stderrAsInt() async* {}
-  @override
-  Stream<List<int>> stdmixAsInt() async* {}
+//   @override
+//   Stream<String> get stdmix {
+//     throw UnimplementedError();
+//   }
 
-  @override
-  Future<void> print() async {
-    await stdout.forEach(core.print);
-  }
+//   @override
+//   Stream<List<int>> stdoutAsInt() async* {}
+//   @override
+//   Stream<List<int>> stderrAsInt() async* {}
+//   @override
+//   Stream<List<int>> stdmixAsInt() async* {}
 
-  @override
-  Future<void> printerr() async {
-    await stdout.forEach(common.printerr);
-  }
+//   @override
+//   Future<void> print() async {
+//     await stdout.forEach(core.print);
+//   }
 
-  @override
-  Future<void> printmix() async {
-    await stdmix.forEach(core.print);
-  }
+//   @override
+//   Future<void> printerr() async {
+//     await stdout.forEach(common.printerr);
+//   }
 
-  @override
-  Future<int> exitCode() {
-    throw UnimplementedError();
-  }
+//   @override
+//   Future<void> printmix() async {
+//     await stdmix.forEach(core.print);
+//   }
 
-  ParsedCliCommand parse() {
-    ParsedCliCommand parsed;
+//   @override
+//   Future<int> exitCode() {
+//     throw UnimplementedError();
+//   }
 
-    switch (argMethod) {
-      case ArgMethod.command:
-        parsed = ParsedCliCommand.fromArgList(
-            _command!, <String>[], workingDirectory);
-        break;
-      case ArgMethod.commandAndArgs:
-        parsed = ParsedCliCommand(_commandAndArgs!, workingDirectory);
-        break;
-      case ArgMethod.commandAndList:
-        parsed =
-            ParsedCliCommand.fromArgList(_command!, _argList, workingDirectory);
-        break;
-    }
+  
+//   void wireStreams(Process process) {
+//     /// handle stdout stream
+//     process.stdout
+//         .transform(utf8.decoder)
+//         .transform(const LineSplitter())
+//         .listen(progress.printStdOut)
+//         .onDone(_stdoutFlushed.complete);
 
-    return parsed;
-  }
-
-  void wireStreams(Process process) {
-    /// handle stdout stream
-    process.stdout
-        .transform(utf8.decoder)
-        .transform(const LineSplitter())
-        .listen(progress.printStdOut)
-        .onDone(_stdoutFlushed.complete);
-
-    // handle stderr stream
-    process.stderr
-        .transform(utf8.decoder)
-        .transform(const LineSplitter())
-        .listen(progress.printStdErr)
-        .onDone(_stderrFlushed.complete);
-  }
-}
+//     // handle stderr stream
+//     process.stderr
+//         .transform(utf8.decoder)
+//         .transform(const LineSplitter())
+//         .listen(progress.printStdErr)
+//         .onDone(_stderrFlushed.complete);
+//   }
+// }

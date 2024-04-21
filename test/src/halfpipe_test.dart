@@ -1,29 +1,29 @@
-import 'package:halfpipe/halfpipe.dart';
+import 'package:halfpipe/src/half_pipe2.dart';
 import 'package:test/test.dart';
 
 void main() {
   group('A group of tests', () {
     test('First Test', () async {
-      await HalfPipe.command('ls').stdout.forEach(print);
-      await HalfPipe.commandAndArgList('ls', ['-la']).print();
-      await HalfPipe.commandAndArgs('ls -la').print();
-      await HalfPipe.commandAndArgs('ls -la').printerr();
-      await HalfPipe.commandAndArgs('ls -la').printmix();
-      HalfPipe.commandAndArgs('cat image.png').stdoutAsInt();
-      await HalfPipe.commandAndArgs('ls -la').print();
-      await HalfPipe.commandAndArgs('ls -la').printmix();
+      await HalfPipe2().command('ls').print();
 
-      await 'ls -la'.run;
+      await HalfPipe2().commandAndArgs('ls', args: ['-la']).print();
+      await HalfPipe2().command('ls -la').print();
+      await HalfPipe2().command('ls -la').printerr();
+      await HalfPipe2().command('ls -la').printmix();
+      await HalfPipe2().command('cat image.png').run();
+      await HalfPipe2().command('ls -la').print();
+      await HalfPipe2().command('ls -la').printmix();
 
-      'ls -la'.start().print();
-      'ls -la'.exitCode();
+      await HalfPipe2().command('ls -la').print();
+      await HalfPipe2().command('ls -la').exitCode();
 
-      HalfPipe.commandAndArgList('ls', ['-la'])
-        ..runInShell = true
-        ..detached = false
-        ..terminal = true
-        ..extensionSearch = false
-        ..print();
+      await HalfPipe2()
+          .commandAndArgs('ls',
+              args: ['-la'],
+              runInShell: true,
+              terminal: true,
+              extensionSearch: false)
+          .print();
     });
   });
 }

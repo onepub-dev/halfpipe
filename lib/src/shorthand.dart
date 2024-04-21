@@ -1,7 +1,8 @@
-import 'package:dcli_core/dcli_core.dart';
+import 'package:dcli/dcli.dart';
 
-import '../halfpipe.dart';
-import 'half_pipe_has_command.dart';
+import 'half_pipe2.dart';
+import 'pipeline/pipe_phase.dart';
+import 'transformers/transform.dart';
 
 /// Typedef for LineActions
 typedef LineAction = void Function(String line);
@@ -14,11 +15,11 @@ void _noOpAction(String line) {}
 extension StringAsProcess on String {
   /// run
   Future<void> get run async {
-    await HalfPipe.commandAndArgs(this).print();
+    await HalfPipe2().commandAndArgs(this).print();
   }
 
   /// start
-  HalfPipeHasCommand start({
+  PipePhase<int> start({
     String? workingDirectory,
     bool runInShell = false,
     bool detached = false,
@@ -26,13 +27,13 @@ extension StringAsProcess on String {
     bool nothrow = false,
     bool extensionSearch = true,
   }) =>
-      HalfPipe.commandAndArgs(this)
-        ..workingDirectory = workingDirectory
-        ..runInShell = runInShell
-        ..detached = detached
-        ..terminal = terminal
-        ..nothrow = nothrow
-        ..extensionSearch = extensionSearch;
+      HalfPipe2().commandAndArgs(this,
+          workingDirectory: workingDirectory,
+          runInShell: runInShell,
+          detached: detached,
+          terminal: terminal,
+          nothrow: nothrow,
+          extensionSearch: extensionSearch);
 
   /// foreach
   Future<void> forEach(
@@ -45,15 +46,22 @@ extension StringAsProcess on String {
     bool nothrow = false,
     bool extensionSearch = true,
   }) async {
-    final pipe = HalfPipe.commandAndArgs(this)
-      ..workingDirectory = workingDirectory
-      ..runInShell = runInShell
-      ..detached = detached
-      ..terminal = terminal
-      ..nothrow = nothrow
-      ..extensionSearch = extensionSearch;
-    await pipe.stdout.forEach((line) => stdout(line));
-    await pipe.stderr.forEach((line) => stderr(line));
+    final pipe = HalfPipe2()
+        .commandAndArgs(this,
+            workingDirectory: workingDirectory,
+            runInShell: runInShell,
+            detached: detached,
+            terminal: terminal,
+            nothrow: nothrow,
+            extensionSearch: extensionSearch)
+        .block((srcIn, srcErr, sinkOut, sinkErr) async {
+      srcIn.listen(print);
+      srcErr.listen(printerr);
+    });
+    pipe.stdout.listen(print);
+    pipe.stderr.listen(printerr);
+
+    await pipe.run();
   }
 
   Future<List<String>> toList(
@@ -68,15 +76,17 @@ extension StringAsProcess on String {
   }) async {
     final lines = <String>[];
 
-    final pipe = HalfPipe.commandAndArgs(commandAndArgs)
-      ..runInShell = runInShell
-      ..detached = detached
-      ..terminal = terminal
-      ..nothrow = nothrow
-      ..workingDirectory = workingDirectory
-      ..extensionSearch = extensionSearch;
+    final pipe = HalfPipe2()
+        .commandAndArgs(commandAndArgs,
+            runInShell: runInShell,
+            detached: detached,
+            terminal: terminal,
+            nothrow: nothrow,
+            workingDirectory: workingDirectory,
+            extensionSearch: extensionSearch)
+        .transform(Transform.line);
 
-    await pipe.stdmix.forEach(lines.add);
+    (await pipe.stdmix).listen((lines) => lines.addAll(lines));
 
     return lines.sublist(skipLines);
   }

@@ -3,38 +3,91 @@ import 'dart:io';
 
 import 'package:dcli_core/dcli_core.dart' hide RunException;
 
-import '../halfpipe.dart';
+import 'parse_cli_command.dart';
 import 'process_helper.dart';
 import 'run_exception.dart';
 
-class RunProcess {
-  Future<Process> start({required HalfPipe halfPipe}) async {
-    var workingDirectory = halfPipe.workingDirectory;
-    workingDirectory ??= Directory.current.path;
+enum ArgMethod { command, commandAndArgs, commandAndList }
 
+class RunProcess {
+  RunProcess.commandLine(String commandLine,
+      {required this.runInShell,
+      required this.detached,
+      required this.terminal,
+      required this.nothrow,
+      required this.extensionSearch,
+      String? workingDirectory})
+      : workingDirectory = workingDirectory ?? pwd {
+    _parsed = ParsedCliCommand(commandLine, workingDirectory);
+  }
+
+  RunProcess.withArgList(String command,
+      {required this.runInShell,
+      required this.detached,
+      required this.terminal,
+      required this.nothrow,
+      required this.extensionSearch,
+      List<String>? args,
+      String? workingDirectory})
+      : workingDirectory = workingDirectory ?? pwd {
+    _parsed =
+        ParsedCliCommand.fromArgList(command, args ?? [], workingDirectory);
+  }
+
+  String workingDirectory;
+
+  late ParsedCliCommand _parsed;
+
+  bool runInShell;
+  bool detached;
+  bool terminal;
+  bool nothrow;
+  bool extensionSearch;
+
+  Stream<List<int>> get stdout {
+    if (process == null) {
+      throw StateError('You must first call [RunProcess.start]');
+    }
+    return process!.stdout;
+  }
+
+  Stream<List<int>> get stderr {
+    if (process == null) {
+      throw StateError('You must first call [RunProcess.start]');
+    }
+    return process!.stderr;
+  }
+
+  IOSink get stdin {
+    if (process == null) {
+      throw StateError('You must first call [RunProcess.start]');
+    }
+    return process!.stdin;
+  }
+
+  Process? process;
+
+  Future<void> start() async {
     assert(
-      !(halfPipe.terminal == true && halfPipe.detached == true),
+      !(terminal == true && detached == true),
       'You cannot enable terminal and detached at the same time.',
     );
 
-    var mode =
-        halfPipe.detached ? ProcessStartMode.detached : ProcessStartMode.normal;
-    if (halfPipe.terminal) {
+    var mode = detached ? ProcessStartMode.detached : ProcessStartMode.normal;
+    if (terminal) {
       mode = ProcessStartMode.inheritStdio;
     }
 
-    final _parsed = halfPipe.parse();
-
-    if (Settings().isWindows && halfPipe.extensionSearch) {
-      _parsed.cmd = await searchForCommandExtension(
-          _parsed.cmd, halfPipe.workingDirectory);
+    if (Settings().isWindows && extensionSearch) {
+      _parsed.cmd =
+          await searchForCommandExtension(_parsed.cmd, workingDirectory);
     }
 
     if (Settings().isVerbose) {
       final cmdLine = "${_parsed.cmd} ${_parsed.args.join(' ')}";
       verbose(() => 'Process.start: cmdLine $cmdLine');
       verbose(
-        () => 'Process.start: runInShell: ${halfPipe.runInShell} '
+        () => 'Process.start: runInShell: $runInShell '
             'workingDir: $workingDirectory mode: $mode '
             'cmd: ${_parsed.cmd} args: ${_parsed.args.join(', ')}',
       );
@@ -49,10 +102,10 @@ class RunProcess {
       );
     }
     try {
-      return await Process.start(
+      process = await Process.start(
         _parsed.cmd,
         _parsed.args,
-        runInShell: halfPipe.runInShell,
+        runInShell: runInShell,
         workingDirectory: workingDirectory,
         mode: mode,
         environment: envs,

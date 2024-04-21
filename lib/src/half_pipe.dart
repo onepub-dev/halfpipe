@@ -1,7 +1,4 @@
-import 'dart:async';
 
-import 'middleware.dart';
-import 'run.dart';
 /*
 
 
@@ -61,54 +58,55 @@ pipeline((stdin)
 // Future<void> Function(Stream<int>, Stream<int>?, Stream<int>?)
 // Future<void> Function(Stream<int>, [Stream<int>?, Stream<int>?])
 
-typedef BlockCallback = Future<void> Function(Stream<List<int>> stdin,
-    StreamSink<List<int>>? stdout, StreamSink<List<int>>? stderr);
+// typedef BlockCallback = Future<void> Function(Stream<List<int>> stdin,
+//     StreamSink<List<int>>? stdout, StreamSink<List<int>>? stderr);
 
-class HalfPipe {
-  HalfPipe() {
-    stdout = stdoutController.sink;
-    stderr = stderrController.sink;
-  }
-  List<Middleware> processors = <Middleware>[];
+// class HalfPipe {
+//   HalfPipe() {
+//     stdout = stdoutController.sink;
+//     stderr = stderrController.sink;
+//   }
+//   List<Middleware> processors = <Middleware>[];
 
-  Middleware<int> run(String cmd) {
-    final processor = Run(cmd, this);
-    processors.add(processor);
-    return processor;
-  }
+//   Middleware<int> run(String cmd) {
+//     final processor = Run(cmd, this);
+//     processors.add(processor);
+//     return processor;
+//   }
 
-  late final stdoutController = StreamController<List<int>>();
-  late final StreamSink<List<int>> stdout;
+//   late final stdoutController = StreamController<List<int>>();
+//   late final StreamSink<List<int>> stdout;
 
-  late final stderrController = StreamController<List<int>>();
-  late final StreamSink<List<int>> stderr;
+//   late final stderrController = StreamController<List<int>>();
+//   late final StreamSink<List<int>> stderr;
 
-  void close() {
-    stdoutController.close();
-    stderrController.close();
+//   Future<void> close() async {
+//     await stdoutController.close();
+//     await stderrController.close();
 
-    stdout.close();
-    stderr.close();
-  }
+//     await stdout.close();
+//     await stderr.close();
+//   }
 
-  // ignore: prefer_void_to_null
-  void process(BlockCallback action) {
-    runZonedGuarded(
-        () => action(stdoutController.stream, stdout, stderr), (e, st) {},
-        zoneSpecification: ZoneSpecification(print: (self, parent, zone, line) {
-      stdout.add(line.codeUnits);
-    }));
-  }
+//   // ignore: prefer_void_to_null
+//   Future<void> process(BlockCallback action) async {
+//     await runZonedGuarded(
+//         () async => action(stdoutController.stream
+//, stdout, stderr), (e, st) {},
+//         zoneSpecification: ZoneSpecification(print:
+// (self, parent, zone, line) {
+//       stdout.add(line.codeUnits);
+//     }));
+//   }
 
-  void redirect(int action) {}
+//   void redirect(int action) {}
 
-  static int errToOut = 1;
-  static int outToErr = 2;
-}
-
-// Stream<int> block(Null Function() param0) {
+//   static int errToOut = 1;
+//   static int outToErr = 2;
 // }
 
-// void pipeline(List<int?> list) {
-// }
+// // Stream<int> block(Null Function() param0) {
+// // }
 
+// // void pipeline(List<int?> list) {
+// // }

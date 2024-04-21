@@ -1,69 +1,61 @@
 // ignore_for_file: avoid_returning_this
 
 import 'dart:async';
-import 'dart:io';
 
-import 'pipeline/command_pipe_section.dart';
-import 'pipeline/pipe_section.dart';
-import 'pipeline/processor_pipe_section.dart';
-import 'pipeline/transformer_pipe_section.dart';
-import 'transformers/transformer.dart';
+import 'pipeline.dart';
+import 'pipeline/pipe_phase.dart';
+import 'processors/processor.dart';
 
-typedef Processor = Future<void> Function(
-    Stream<List<String>> stdin, IOSink stdout, IOSink stderr);
+/// Out [Pipeline] allows us to pass through stdout and
+/// stderr unlike a bash pipeline that only has one input
+/// channel.
+/// If a external command is added to the pipeline then
+/// only sinkOut and sinkErr will be combined and written
+/// to the external commands stdin.
+typedef Block2<I, O> = Future<void> Function(
+    Stream<List<I>> srcIn,
+    Stream<List<I>> srcErr,
+    StreamSink<List<O>> sinkOut,
+    StreamSink<List<O>> sinkErr);
 
 class HalfPipe2 {
-  HalfPipe2 command(String command, [List<String>? args]) {
-    sections.add(CommandPipeSection(command, args: args));
-    return this;
+  HalfPipe2() {
+    initialPipePhase = PipePhase<int>(this);
   }
 
-  List<PipeSection> sections = [];
+  late final PipePhase<int> initialPipePhase;
 
-  /// Defines a block of dart code that can is called as
-  /// part of the pipeline.
-  HalfPipe2 processor(Processor callback) {
-    sections.add(ProcessorPipeSection(callback));
+  PipePhase<int> command(String commandLine,
+          {bool runInShell = false,
+          bool detached = false,
+          bool terminal = false,
+          bool extensionSearch = true}) =>
+      initialPipePhase.command(commandLine,
+          runInShell: runInShell,
+          detached: detached,
+          terminal: terminal,
+          extensionSearch: extensionSearch);
 
-    return this;
-  }
+  PipePhase<int> commandAndArgs(String command,
+          {List<String>? args,
+          bool runInShell = false,
+          bool detached = false,
+          bool terminal = false,
+          bool nothrow = false,
+          bool extensionSearch = true,
+          String? workingDirectory}) =>
+      initialPipePhase.commandAndArgs(command,
+          args: args,
+          runInShell: runInShell,
+          detached: detached,
+          terminal: terminal,
+          extensionSearch: extensionSearch);
 
-  ///
-  HalfPipe2 transformer(Transformer transformer) {
-    sections.add(TransformerPipeSection(transformer));
-    return this;
-  }
+  PipePhase<T> block<T>(Block2<int, T> callback) =>
+      initialPipePhase.block<T>(callback);
 
-  /// redirect the processors output
-  HalfPipe2 redirectStdout(Redirect redirect) => this;
-  HalfPipe2 redirectStderr(Redirect redirect) => this;
-
-  /// Runs the pipeline outputing the results to a list.
-  /// If the list exceeds [maxBuffer] then any further
-  /// data will be dropped
-  /// TODO: support a mode where we keep the last [maxBuffer] lines
-  List<String> toList([int maxBuffer = 10000]) {
-    final lines = <String>[];
-
-    sections.add(ProcessorPipeSection((stdin, stdout, stderr) async {
-      stdin.listen((lineList) {
-        lines.addAll(lineList);
-        // Remove excess lines beyond maxBuffer
-        while (lines.length >= maxBuffer) {
-          lines.removeAt(0);
-        }
-        // Add the new line
-      });
-    }));
-
-    /// run the pipeline.
-    _run();
-    return lines;
-  }
-
-  // Wire up the [PipeSection]s by attaching their streams
-  // and then run the pipeline.
-  void _run() {}
+  PipePhase<int> processor(Processor<int> processor) =>
+      initialPipePhase.processor(processor);
 }
 
 enum Redirect { toStdout, toStderr, toDevNull }

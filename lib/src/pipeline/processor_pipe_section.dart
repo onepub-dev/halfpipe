@@ -1,23 +1,18 @@
 // ignore_for_file: avoid_returning_this
 
 import 'dart:async';
-import 'dart:io';
 
-import '../half_pipe2.dart';
+import '../processors/processor.dart';
 import 'pipe_section.dart';
 
-class ProcessorPipeSection extends PipeSection {
-  ProcessorPipeSection(this.action);
+class ProcessorPipeSection<T> extends PipeSection<T, T> {
+  ProcessorPipeSection(this.transformer);
 
-  Processor action;
+  Processor<T> transformer;
 
   @override
-  Future<void> process(
-      Stream<List<String>> stdin, IOSink stdout, IOSink stderr) async {
-    await runZonedGuarded(
-        () => action(stdoutController.stream, stdout, stderr), (e, st) {},
-        zoneSpecification: ZoneSpecification(print: (self, parent, zone, line) {
-      stdout.add(line.codeUnits);
-    }));
+  Future<void> start(Stream<List<T>> srcIn, Stream<List<T>> srcErr,
+      StreamSink<List<T>> sinkOut, StreamSink<List<T>> sinkErr) async {
+    await transformer.start(srcIn, srcErr, sinkOut, sinkErr);
   }
 }
