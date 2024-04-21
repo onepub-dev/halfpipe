@@ -1,17 +1,29 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:dcli/dcli.dart';
+import 'package:dcli/dcli.dart' hide touch;
 import 'package:dcli_core/dcli_core.dart';
 import 'package:halfpipe/src/half_pipe2.dart';
 import 'package:halfpipe/src/processors/read_file.dart';
 import 'package:halfpipe/src/processors/skip.dart';
 import 'package:halfpipe/src/processors/tee.dart';
 import 'package:halfpipe/src/transformers/transform.dart';
-import 'package:path/path.dart';
+import 'package:path/path.dart' hide equals;
 import 'package:test/test.dart' hide Skip;
 
 void main() {
+  test('simple command', () async {
+    await withTempDirAsync((tempDir) async {
+      touch('one.txt', create: true);
+      touch('two.txt', create: true);
+      // run ls
+      final list = await HalfPipe2().command('ls')
+      .toList();
+      expect(list.length, equals(2));
+      expect(list.first, equals('one.txt'));
+      expect(list.last, equals('two.txt'));
+    });
+  });
   test('half pipe ...', () async {
     print('start');
     await HalfPipe2()

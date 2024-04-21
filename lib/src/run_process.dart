@@ -67,6 +67,14 @@ class RunProcess {
 
   Process? process;
 
+  Future<int> get exitCode {
+    if (process == null) {
+      throw StateError('You must first call [RunProcess.start]');
+    }
+
+    return process!.exitCode;
+  }
+
   Future<void> start() async {
     assert(
       !(terminal == true && detached == true),

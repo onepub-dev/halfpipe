@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_returning_this
+// ignore_for_file: avoid_returning_this, strict_raw_type
 
 import 'dart:async';
 import 'dart:convert';
@@ -28,7 +28,6 @@ class PipePhase<T> {
 
   /// TODO: how do I handle the types as each [PipeSection] could
   /// be a different type.
-  // ignore: strict_raw_type
   List<PipeSection> sections = [];
 
   PipePhase<int> command(String commandLine,
@@ -65,7 +64,7 @@ class PipePhase<T> {
 
   /// Defines a block of dart code that can is called as
   /// part of the pipeline.
-  PipePhase<O> block<O>(Block2<T, O> callback) {
+  PipePhase<O> block<O>(Block<T, O> callback) {
     sections.add(BlockPipeSection<T, O>(callback));
 
     return _changeType<T, O>(this);
@@ -104,15 +103,14 @@ class PipePhase<T> {
   Future<List<T>> toList([int maxBuffer = 10000]) async {
     final lines = <T>[];
 
-    sections
-        .add(BlockPipeSection<T, String>((srcIn, srcErr, stdout, stderr) async {
+    sections.add(BlockPipeSection<T, T>((srcIn, srcErr, stdout, stderr) async {
       srcIn.listen((lineList) {
-        lines.addAll(lineList);
-        // Remove excess lines beyond maxBuffer
-        while (lines.length >= maxBuffer) {
-          lines.removeAt(0);
+        for (final line in lineList) {
+          if (lines.length < maxBuffer) {
+            // Add the new lines
+            lines.add(line);
+          }
         }
-        // Add the new line
       });
     }));
 
@@ -161,45 +159,59 @@ class PipePhase<T> {
 
   /// The output of the final phase is funnelled into
   /// these two controllers.
-  StreamController<core.List> stdoutController =
-      StreamController<List<dynamic>>();
-  StreamController<core.List> stderrController =
-      StreamController<List<dynamic>>();
+  StreamController<core.List> sinkOutController = StreamController<List<T>>();
+  StreamController<core.List> sinkErrController = StreamController<List<T>>();
 
   // Wire up the [PipeSection]s by attaching their streams
   // and then run the pipeline.
   Future<void> run() async {
     final stdinController = StreamController<List<dynamic>>();
-    var priorSrcIn = stdinController.stream;
+    var priorSinkOut = stdinController;
 
     stdin.listen((data) => stdinController.sink.add(data));
 
     /// The first section has no error inputs so wire in
     /// an empty stream.
-    var priorSrcErr = StreamController<List<dynamic>>().stream;
+    var priorSinkErr = StreamController<List<dynamic>>();
     final controllersToClose = <StreamController<List<dynamic>>>[];
-    for (final section in sections) {
+
+    late StreamController<List<dynamic>> nextIn;
+    late StreamController<List<dynamic>> nextErr;
+
+    for (var i = 0; i < sections.length; i++) {
+      final section = sections[i];
+
+      if (i < sections.length - 1) {
+        nextIn = sections[i + 1].srcInController;
+        nextErr = sections[i + 1].srcErrController;
+      } else {
+        // If we are on the last section then
+        // wire it to the final output controllers
+        nextIn = sinkOutController;
+        nextErr = sinkErrController;
+      }
       // ignore: close_sinks
-      final nextIn = StreamController<List<dynamic>>();
+      // final nextIn = StreamController<List<dynamic>>();
       // ignore: close_sinks
-      final nextErr = StreamController<List<dynamic>>();
-      controllersToClose.addAll([nextIn, nextErr]);
+      // final nextErr = StreamController<List<dynamic>>();
+      // controllersToClose.addAll([nextIn, nextErr]);
 
-      await section.start(priorSrcIn, priorSrcErr, nextIn.sink, nextErr.sink);
+      await section.start(
+          priorSinkOut.stream, priorSinkErr.stream, nextIn.sink, nextErr.sink);
 
-      priorSrcIn = nextIn.stream;
-      priorSrcErr = nextErr.stream;
+      priorSinkOut = section.sinkOutController;
+      priorSinkErr = section.sinkErrController;
 
-      /// on the last loop we will capture
-      /// the final controllers
-      stdoutController = nextIn;
-      stderrController = nextErr;
+      // priorSrcIn = nextIn.stream;
+      // priorSrcErr = nextErr.stream;
     }
 
-    for (final controller in controllersToClose) {
-      await controller.close();
-    }
-    await stdinController.close();
+    /// TODO: work out when to close these. We can't do it until all the data
+    /// has been processed.
+    // for (final controller in controllersToClose) {
+    //   await controller.close();
+    // }
+    // await stdinController.close();
   }
 
   PipePhase<O> _changeType<I, O>(PipePhase<I> src) {
@@ -207,8 +219,8 @@ class PipePhase<T> {
     return out;
   }
 
-  Stream<List<T>> get stdout => stdoutController.stream as Stream<List<T>>;
-  Stream<List<T>> get stderr => stderrController.stream as Stream<List<T>>;
+  Stream<List<T>> get stdout => sinkOutController.stream as Stream<List<T>>;
+  Stream<List<T>> get stderr => sinkErrController.stream as Stream<List<T>>;
 
   Future<Stream<core.List<T>>> get stdmix async => mixStreams(stdout, stderr);
 // Function to mix two streams

@@ -4,8 +4,8 @@ import 'dart:async';
 
 abstract class PipeSection<I, O> {
   PipeSection() {
-    stdout = stdoutController.sink;
-    stderr = stderrController.sink;
+    sinkOut = sinkOutController.sink;
+    sinkErr = sinkErrController.sink;
   }
 
   /// Runs the defined action passing in data from the previous [PipeSection]
@@ -21,24 +21,29 @@ abstract class PipeSection<I, O> {
   /// via streams.
 
   /// input from the prior pipe-section
-  late final stdinController = StreamController<List<I>>();
-  late final StreamSubscription<List<I>> stdin;
+  late final srcInController = StreamController<List<I>>();
+  late final StreamSubscription<List<I>> srcIn;
+
+  late final srcErrController = StreamController<List<I>>();
+  late final StreamSubscription<List<I>> srcErr;
 
   /// send data to stdout
-  late final stdoutController = StreamController<List<O>>();
-  late final StreamSink<List<O>> stdout;
+  late final sinkOutController = StreamController<List<O>>();
+  late final StreamSink<List<O>> sinkOut;
 
   /// send data to stderr
-  late final stderrController = StreamController<List<O>>();
-  late final StreamSink<List<O>> stderr;
+  late final sinkErrController = StreamController<List<O>>();
+  late final StreamSink<List<O>> sinkErr;
 
   Future<void> close() async {
-    await stdinController.close();
-    await stdoutController.close();
-    await stderrController.close();
+    await srcInController.close();
+    await srcErrController.close();
 
-    await stdin.cancel();
-    await stdout.close();
-    await stderr.close();
+    await sinkOutController.close();
+    await sinkErrController.close();
+
+    await srcIn.cancel();
+    await sinkOut.close();
+    await sinkErr.close();
   }
 }
