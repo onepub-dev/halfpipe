@@ -1,4 +1,4 @@
 // barrel file.
 
-export 'src/halfpipe.dart';
+export 'src/half_pipe.dart';
 export 'src/shorthand.dart';
