@@ -67,7 +67,7 @@ class RunProcess {
 
   Process? process;
 
-  Future<int> get exitCode {
+  Future<int>get exitCode {
     if (process == null) {
       throw StateError('You must first call [RunProcess.start]');
     }
