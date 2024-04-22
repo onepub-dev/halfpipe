@@ -1,6 +1,6 @@
 import 'package:dcli/dcli.dart';
 
-import 'half_pipe2.dart';
+import 'half_pipe.dart';
 import 'pipeline/pipe_phase.dart';
 import 'transformers/transform.dart';
 
