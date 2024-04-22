@@ -1,112 +1,70 @@
+// ignore_for_file: avoid_returning_this
 
-/*
+import 'dart:async';
 
+import 'pipeline.dart';
+import 'pipeline/pipe_phase.dart';
+import 'processors/processor.dart';
 
-  Progress? progress,
-  bool runInShell = false,
-  bool detached = false,
-  bool terminal = false,
-  bool nothrow = false,
-  bool privileged = false,
-  String? workingDirectory,
-  bool extensionSearch = true,
+/// Out [Pipeline] allows us to pass through stdout and
+/// stderr unlike a bash pipeline that only has one input
+/// channel.
+/// If a external command is added to the pipeline then
+/// only sinkOut and sinkErr will be combined and written
+/// to the external commands stdin.
+typedef Block<I, O> = Future<void> Function(
+    Stream<List<I>> srcIn,
+    Stream<List<I>> srcErr,
+    StreamSink<List<O>> sinkOut,
+    StreamSink<List<O>> sinkErr);
 
-  progress allows us to control stdout and stderr
+class HalfPipe {
+  HalfPipe() {
+    initialPipePhase = PipePhase<int>(this);
+  }
 
-  bash normally pipes stdout but you can redirect stderr.
+  late final PipePhase<int> initialPipePhase;
 
-  Setup a context that controls how the script runs?
+  PipePhase<int> command(
+    String commandLine, {
+    bool runInShell = false,
+    bool detached = false,
+    bool terminal = false,
+    bool extensionSearch = true,
+    String? workingDirectory,
+  }) =>
+      initialPipePhase.command(
+        commandLine,
+        runInShell: runInShell,
+        detached: detached,
+        terminal: terminal,
+        extensionSearch: extensionSearch,
+        workingDirectory: workingDirectory,
+      );
 
+  PipePhase<int> commandAndArgs(String command,
+          {List<String>? args,
+          bool runInShell = false,
+          bool detached = false,
+          bool terminal = false,
+          bool nothrow = false,
+          bool extensionSearch = true,
+          String? workingDirectory}) =>
+      initialPipePhase.commandAndArgs(
+        command,
+        args: args,
+        runInShell: runInShell,
+        detached: detached,
+        terminal: terminal,
+        extensionSearch: extensionSearch,
+        workingDirectory: workingDirectory,
+      );
 
-```dart 
+  PipePhase<T> block<T>(Block<int, T> callback) =>
+      initialPipePhase.block<T>(callback);
 
-Script.run('ls');
+  PipePhase<int> processor(Processor<int> processor) =>
+      initialPipePhase.processor(processor);
+}
 
-Script.pipeline(['ls', 'grep']);
-
-Script.pipeline([Script.run('ls'), Script.run('grep')]);
-
-pipeline(['ls', 'grep'])
-
-run('ls')
-
-withContext(() async {
-  await run('ls');
-  run('grep');
-  serr('grep');
-  sout('grep');
-}, detached: true);
-
-pipeline(() {
-  run('ls');
-  block(() { // script()
-    print('hi');
-    printerr('ho');
-  })
-});
-
-/* pipeline wires streams together */
-pipeline((stdin)
-{
-    sout(File('data.txt').openRead()); // takes the stream and attaches it to the pipe line.
-    zlib.decoder
-});
-
-```
-*/
-
-// Future<void> Function(Stream<int>, Stream<int>?, Stream<int>?)
-// Future<void> Function(Stream<int>, [Stream<int>?, Stream<int>?])
-
-// typedef BlockCallback = Future<void> Function(Stream<List<int>> stdin,
-//     StreamSink<List<int>>? stdout, StreamSink<List<int>>? stderr);
-
-// class HalfPipe {
-//   HalfPipe() {
-//     stdout = stdoutController.sink;
-//     stderr = stderrController.sink;
-//   }
-//   List<Middleware> processors = <Middleware>[];
-
-//   Middleware<int> run(String cmd) {
-//     final processor = Run(cmd, this);
-//     processors.add(processor);
-//     return processor;
-//   }
-
-//   late final stdoutController = StreamController<List<int>>();
-//   late final StreamSink<List<int>> stdout;
-
-//   late final stderrController = StreamController<List<int>>();
-//   late final StreamSink<List<int>> stderr;
-
-//   Future<void> close() async {
-//     await stdoutController.close();
-//     await stderrController.close();
-
-//     await stdout.close();
-//     await stderr.close();
-//   }
-
-//   // ignore: prefer_void_to_null
-//   Future<void> process(BlockCallback action) async {
-//     await runZonedGuarded(
-//         () async => action(stdoutController.stream
-//, stdout, stderr), (e, st) {},
-//         zoneSpecification: ZoneSpecification(print:
-// (self, parent, zone, line) {
-//       stdout.add(line.codeUnits);
-//     }));
-//   }
-
-//   void redirect(int action) {}
-
-//   static int errToOut = 1;
-//   static int outToErr = 2;
-// }
-
-// // Stream<int> block(Null Function() param0) {
-// // }
-
-// // void pipeline(List<int?> list) {
-// // }
+enum Redirect { toStdout, toStderr, toDevNull }

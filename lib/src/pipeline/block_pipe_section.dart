@@ -3,7 +3,7 @@
 import 'dart:async';
 import 'dart:io';
 
-import '../half_pipe2.dart';
+import '../half_pipe.dart';
 import 'pipe_section.dart';
 
 class BlockPipeSection<I, O> extends PipeSection<I, O> {

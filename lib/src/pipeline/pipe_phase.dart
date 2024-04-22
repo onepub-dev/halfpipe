@@ -8,7 +8,7 @@ import 'dart:io';
 
 import 'package:async/async.dart';
 
-import '../half_pipe2.dart';
+import '../half_pipe.dart';
 import '../processors/processor.dart';
 import 'block_pipe_section.dart';
 import 'command_pipe_section.dart';
@@ -24,7 +24,7 @@ import 'transformer_pipe_section.dart';
 class PipePhase<T> {
   PipePhase(this._halfPipe2);
 
-  final HalfPipe2 _halfPipe2;
+  final HalfPipe _halfPipe2;
 
   /// TODO: how do I handle the types as each [PipeSection] could
   /// be a different type.
@@ -34,12 +34,14 @@ class PipePhase<T> {
       {bool runInShell = false,
       bool detached = false,
       bool terminal = false,
-      bool extensionSearch = true}) {
+      bool extensionSearch = true,
+      String? workingDirectory}) {
     sections.add(CommandPipeSection.commandLine(commandLine,
         runInShell: runInShell,
         detached: detached,
         terminal: terminal,
-        extensionSearch: extensionSearch));
+        extensionSearch: extensionSearch,
+        workingDirectory: workingDirectory));
     return _changeType<T, int>(this);
   }
 

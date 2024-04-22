@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:dcli/dcli.dart' hide touch;
 import 'package:dcli_core/dcli_core.dart';
-import 'package:halfpipe/src/half_pipe2.dart';
+import 'package:halfpipe/src/half_pipe.dart';
 import 'package:halfpipe/src/processors/read_file.dart';
 import 'package:halfpipe/src/processors/skip.dart';
 import 'package:halfpipe/src/processors/tee.dart';
@@ -14,11 +14,13 @@ import 'package:test/test.dart' hide Skip;
 void main() {
   test('simple command', () async {
     await withTempDirAsync((tempDir) async {
-      touch('one.txt', create: true);
-      touch('two.txt', create: true);
+      touch(join(tempDir, 'one.txt'), create: true);
+      touch(join(tempDir, 'two.txt'), create: true);
       // run ls
-      final list =
-          await HalfPipe2().command('ls').transform(Transform.line).toList();
+      final list = await HalfPipe()
+          .command('ls', workingDirectory: tempDir)
+          .transform(Transform.line)
+          .toList();
       expect(list.length, equals(2));
       expect(list.first, equals('one.txt'));
       expect(list.last, equals('two.txt'));
@@ -26,7 +28,7 @@ void main() {
   });
   test('half pipe ...', () async {
     print('start');
-    await HalfPipe2()
+    await HalfPipe()
         .command('ls')
         // process the output of ls through a block of dart code
         .block((srcIn, srcErr, stdout, stderr) async {
@@ -54,7 +56,7 @@ void main() {
     await withTempDirAsync((tempDir) async {
       final pathToFile = join(tempDir, 'somefile.txt');
       final pathToZip = join(tempDir, 'some.zip');
-      final pipe = HalfPipe2() // process as a binary stream.
+      final pipe = HalfPipe() // process as a binary stream.
           .processor(ReadFile(pathToZip))
           .transform<int>(zlib.decoder) // provides a stream of file entities
           .write(tempDir); // not certain how this works.
@@ -66,7 +68,7 @@ void main() {
       //     .orExpect(2)
       //     .onError(exitCode, error);
 
-      await HalfPipe2()
+      await HalfPipe()
           .processor(ReadFile('path/to/file'))
           .command('runme')
           .processor(Tee(pipe))
@@ -75,15 +77,15 @@ void main() {
         /// do some processing in dart.
       }).toList();
 
-      await HalfPipe2()
+      await HalfPipe()
           .processor(ReadFile(
               'path/to/file')) // read as binary file then use Transform.line
           .transform(Transform.line)
           .toList();
 
-      (await HalfPipe2().processor(ReadFile(pathToFile)).toList()).take(5);
+      (await HalfPipe().processor(ReadFile(pathToFile)).toList()).take(5);
 
-      await HalfPipe2()
+      await HalfPipe()
           .processor(ReadFile(pathToFile))
           .transform(Transform.line)
           .processor(Skip(5))

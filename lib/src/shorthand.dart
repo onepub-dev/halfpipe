@@ -15,7 +15,7 @@ void _noOpAction(String line) {}
 extension StringAsProcess on String {
   /// run
   Future<void> get run async {
-    await HalfPipe2().commandAndArgs(this).print();
+    await HalfPipe().commandAndArgs(this).print();
   }
 
   /// start
@@ -27,7 +27,7 @@ extension StringAsProcess on String {
     bool nothrow = false,
     bool extensionSearch = true,
   }) =>
-      HalfPipe2().commandAndArgs(this,
+      HalfPipe().commandAndArgs(this,
           workingDirectory: workingDirectory,
           runInShell: runInShell,
           detached: detached,
@@ -46,7 +46,7 @@ extension StringAsProcess on String {
     bool nothrow = false,
     bool extensionSearch = true,
   }) async {
-    final pipe = HalfPipe2()
+    final pipe = HalfPipe()
         .commandAndArgs(this,
             workingDirectory: workingDirectory,
             runInShell: runInShell,
@@ -76,7 +76,7 @@ extension StringAsProcess on String {
   }) async {
     final lines = <String>[];
 
-    final pipe = HalfPipe2()
+    final pipe = HalfPipe()
         .commandAndArgs(commandAndArgs,
             runInShell: runInShell,
             detached: detached,
