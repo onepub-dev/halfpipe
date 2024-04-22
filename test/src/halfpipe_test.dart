@@ -1,4 +1,4 @@
-import 'package:halfpipe/src/half_pipe2.dart';
+import 'package:halfpipe/src/half_pipe.dart';
 import 'package:test/test.dart';
 
 void main() {
