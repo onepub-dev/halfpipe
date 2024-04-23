@@ -61,16 +61,34 @@ class CommandPipeSection extends PipeSection<String, String> {
         // .transform(utf8.decoder)
         // .transform(const LineSplitter())
         .listen((data) {
+      print('adding: $data');
       sinkOut.add(data);
-    }).onDone(() => _stdoutFlushed.complete(true));
+    }).onDone(() async {
+      await sinkOut.close();
+      _stdoutFlushed.complete(true);
+    });
 
     runProcess.stderr
         // .transform(utf8.decoder)
         // .transform(const LineSplitter())
         .listen((data) {
+      // print('err: $data');
       sinkErr.add(data);
-    }).onDone(() => _stderrFlushed.complete(true));
+    }).onDone(() async {
+      await sinkErr.close();
+      _stderrFlushed.complete(true);
+    });
 
-    exitCode = await runProcess.exitCode;
+    // If we wait now then we stop the next stage in the pipeline
+    // from running.
+    // exitCode = await runProcess.exitCode;
+    final done = Completer<void>();
+
+    unawaited(Future.wait<void>(
+            [_stdoutFlushed.future, _stderrFlushed.future, runProcess.exitCode])
+        .then((value) => done.complete()));
+
+    /// when all the streams are flushed and the process has exited.
+    return done.future;
   }
 }

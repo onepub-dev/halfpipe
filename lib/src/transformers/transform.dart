@@ -11,7 +11,11 @@ class Transform<I, O> extends Transformer<I, O> {
   @override
   Future<void> start(Stream<List<I>> srcIn, Stream<List<I>> srcErr,
       StreamSink<List<O>> sinkOut, StreamSink<List<O>> sinkErr) async {
-    srcIn.transform(converter);
+    srcIn.transform(converter).listen((event) => sinkOut.add(event),
+        onDone: () async {
+      await sinkOut.close();
+      await sinkErr.close();
+    });
   }
 
   static Utf8LineSplitter get line => Utf8LineSplitter();

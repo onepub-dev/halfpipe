@@ -18,9 +18,9 @@ class TransformerPipeSection<I, O> extends PipeSection<I, O> {
       StreamSink<List<dynamic>> sinkErr) async {
     srcIn.listen((data) {
       sinkOut.add(transformer.convert(data as List<I>));
-    });
+    }, onDone: () => sinkOut.close());
     srcErr.listen((data) {
       sinkErr.add(transformer.convert(data as List<I>));
-    });
+    }, onDone: () => sinkErr.close());
   }
 }

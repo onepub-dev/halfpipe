@@ -103,22 +103,18 @@ class PipePhase<T> {
   /// data will be dropped
   /// TODO: support a mode where we keep the last [maxBuffer] lines
   Future<List<T>> toList([int maxBuffer = 10000]) async {
-    final lines = <T>[];
+    final elements = <T>[];
 
-    sections.add(BlockPipeSection<T, T>((srcIn, srcErr, stdout, stderr) async {
-      srcIn.listen((lineList) {
-        for (final line in lineList) {
-          if (lines.length < maxBuffer) {
-            // Add the new lines
-            lines.add(line);
-          }
-        }
-      });
-    }));
+    sinkOutController.stream.cast<List<T>>().listen((data) {
+      if (elements.length < maxBuffer) {
+        // Add the new lines
+        elements.addAll(data);
+      }
+    });
 
     /// run the pipeline.
     await run();
-    return lines;
+    return elements;
   }
 
   Future<String> toParagraph([int maxBuffer = 10000]) async {
@@ -180,6 +176,8 @@ class PipePhase<T> {
     late StreamController<List<dynamic>> nextOutController;
     late StreamController<List<dynamic>> nextErrController;
 
+    final sectionCompleters = <Future>[];
+
     for (var i = 0; i < sections.length; i++) {
       final section = sections[i];
 
@@ -198,8 +196,12 @@ class PipePhase<T> {
       // final nextErr = StreamController<List<dynamic>>();
       // controllersToClose.addAll([nextIn, nextErr]);
 
-      await section.start(priorOutController.stream, priorErrController.stream,
-          nextOutController.sink, nextErrController.sink);
+      final sectionCompleter = section.start(
+          priorOutController.stream,
+          priorErrController.stream,
+          nextOutController.sink,
+          nextErrController.sink);
+      sectionCompleters.add(sectionCompleter);
 
       priorOutController = nextOutController;
       priorErrController = nextErrController;
@@ -214,6 +216,9 @@ class PipePhase<T> {
     //   await controller.close();
     // }
     // await stdinController.close();
+
+    /// Wait for all sections to process the data through.
+    await Future.wait(sectionCompleters);
   }
 
   PipePhase<O> _changeType<I, O>(PipePhase<I> src) {

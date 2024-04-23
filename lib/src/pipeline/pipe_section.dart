@@ -14,6 +14,8 @@ abstract class PipeSection<I, O> {
   /// [srcErr] is a stream from the prior [PipeSection] equivalent to stderr.
   /// [sinkOut] is where this [PipeSection] writes it's 'good' data.
   /// [sinkErr] is where this [PipeSection] writes its 'bad'data.
+  /// A Future is returned that completes when this [PipeSection] has completed
+  /// generating/processing the [srcIn] and [srcErr] streams.
   Future<void> start(Stream<List<I>> srcIn, Stream<List<I>> srcErr,
       StreamSink<List<O>> sinkOut, StreamSink<List<O>> sinkErr);
 
