@@ -5,14 +5,20 @@ import 'dart:async';
 import '../processors/processor.dart';
 import 'pipe_section.dart';
 
-class ProcessorPipeSection<T> extends PipeSection<T, T> {
+class ProcessorPipeSection<I, O> extends PipeSection<I, O> {
   ProcessorPipeSection(this.transformer);
 
-  Processor<T> transformer;
+  Processor<I, O> transformer;
 
   @override
-  Future<void> start(Stream<List<T>> srcIn, Stream<List<T>> srcErr,
-      StreamSink<List<T>> sinkOut, StreamSink<List<T>> sinkErr) async {
+  Future<void> start(Stream<I> srcIn, Stream<I> srcErr, StreamSink<O> sinkOut,
+      StreamSink<O> sinkErr) async {
     await transformer.start(srcIn, srcErr, sinkOut, sinkErr);
   }
+
+  @override
+  StreamController<O> get errController => StreamController<O>();
+
+  @override
+  StreamController<O> get outController => StreamController<O>();
 }

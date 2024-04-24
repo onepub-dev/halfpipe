@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dcli/dcli.dart';
 
 import 'half_pipe.dart';
@@ -84,7 +86,7 @@ extension StringAsProcess on String {
             nothrow: nothrow,
             workingDirectory: workingDirectory,
             extensionSearch: extensionSearch)
-        .transform(Transform.line);
+        .transform(Transform.line as Converter<int, dynamic>);
 
     (await pipe.stdmix).listen((lines) => lines.addAll(lines));
 

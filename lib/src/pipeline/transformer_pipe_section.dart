@@ -8,19 +8,32 @@ import 'pipe_section.dart';
 class TransformerPipeSection<I, O> extends PipeSection<I, O> {
   TransformerPipeSection(this.transformer);
 
-  Converter<List<I>, List<O>> transformer;
+  Converter<I, O> transformer;
 
   @override
-  Future<void> start(
-      Stream<List<dynamic>> srcIn,
-      Stream<List<dynamic>> srcErr,
-      StreamSink<List<dynamic>> sinkOut,
-      StreamSink<List<dynamic>> sinkErr) async {
+  Future<void> start(Stream<dynamic> srcIn, Stream<dynamic> srcErr,
+      StreamSink<O> sinkOut, StreamSink<O> sinkErr) async {
+    final inputConversionSinkForOut =
+        transformer.startChunkedConversion(sinkOut as Sink<O>);
+    final inputConversionSinkForErr =
+        transformer.startChunkedConversion(sinkErr as Sink<O>);
     srcIn.listen((data) {
-      sinkOut.add(transformer.convert(data as List<I>));
-    }, onDone: () => sinkOut.close());
+      inputConversionSinkForOut.add(data as I);
+    }, onDone: () {
+      inputConversionSinkForOut.close();
+      sinkOut.close();
+    });
     srcErr.listen((data) {
-      sinkErr.add(transformer.convert(data as List<I>));
-    }, onDone: () => sinkErr.close());
+      inputConversionSinkForErr.add(data as I);
+    }, onDone: () {
+      inputConversionSinkForErr.close();
+      sinkErr.close();
+    });
   }
+
+  @override
+  StreamController<O> get errController => StreamController<O>();
+
+  @override
+  StreamController<O> get outController => StreamController<O>();
 }

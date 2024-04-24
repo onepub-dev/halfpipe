@@ -15,6 +15,6 @@ import '../processors/processor.dart';
 /// can write additional [Transformer]s.
 abstract class Transformer<I,O> extends PipeSection<I,O> {
   @override
-  Future<void> start(Stream<List<I>> srcIn, Stream<List<I>> srcErr,
-      StreamSink<List<O>> sinkOut, StreamSink<List<O>> sinkErr);
+  Future<void> start(Stream<I> srcIn, Stream<I> srcErr,
+      StreamSink<O> sinkOut, StreamSink<O> sinkErr);
 }

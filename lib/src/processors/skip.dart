@@ -2,15 +2,15 @@ import 'dart:async';
 
 import 'processor.dart';
 
-class Skip extends Processor<String> {
+class Skip extends Processor<String, String> {
   Skip(this.linesToSkip);
   int linesToSkip;
   @override
   Future<void> start(
-      Stream<List<String>> srcIn,
-      Stream<List<String>> srcErr,
-      StreamSink<List<String>> sinkOut,
-      StreamSink<List<String>> sinkErr) async {
+      Stream<String> srcIn,
+      Stream<String> srcErr,
+      StreamSink<String> sinkOut,
+      StreamSink<String> sinkErr) async {
     var count = linesToSkip;
 
     // do not pass the first [lineToSkip]
@@ -25,4 +25,11 @@ class Skip extends Processor<String> {
     // write [srcErr] directly to [sinkErr]
     await sinkErr.addStream(srcErr);
   }
+
+    @override
+  StreamController<String> get errController => StreamController<String>();
+
+  @override
+  StreamController<String> get outController => StreamController<String>();
+
 }

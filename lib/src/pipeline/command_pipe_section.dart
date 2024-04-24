@@ -5,7 +5,7 @@ import 'dart:async';
 import '../run_process.dart';
 import 'pipe_section.dart';
 
-class CommandPipeSection extends PipeSection<String, String> {
+class CommandPipeSection extends PipeSection<List<int>, List<int>> {
   CommandPipeSection.commandLine(String commandLine,
       {bool runInShell = false,
       bool detached = false,
@@ -45,11 +45,8 @@ class CommandPipeSection extends PipeSection<String, String> {
   int? exitCode;
 
   @override
-  Future<void> start(
-      Stream<List<dynamic>> srcIn,
-      Stream<List<dynamic>> srcErr,
-      StreamSink<List<dynamic>> sinkOut,
-      StreamSink<List<dynamic>> sinkErr) async {
+  Future<void> start(Stream<dynamic> srcIn, Stream<dynamic> srcErr,
+      StreamSink<dynamic> sinkOut, StreamSink<dynamic> sinkErr) async {
     /// Feed data from the prior [PipeSection] into
     /// our running process.
     srcIn.listen((line) => runProcess.stdin.write(line));
@@ -61,7 +58,7 @@ class CommandPipeSection extends PipeSection<String, String> {
         // .transform(utf8.decoder)
         // .transform(const LineSplitter())
         .listen((data) {
-      print('adding: $data');
+      // print('adding: $data');
       sinkOut.add(data);
     }).onDone(() async {
       await sinkOut.close();
@@ -91,4 +88,12 @@ class CommandPipeSection extends PipeSection<String, String> {
     /// when all the streams are flushed and the process has exited.
     return done.future;
   }
+
+  @override
+  StreamController<List<int>> get errController =>
+      StreamController<List<int>>();
+
+  @override
+  StreamController<List<int>> get outController =>
+      StreamController<List<int>>();
 }

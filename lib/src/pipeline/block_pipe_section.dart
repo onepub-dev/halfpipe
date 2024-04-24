@@ -12,20 +12,20 @@ class BlockPipeSection<I, O> extends PipeSection<I, O> {
   Block<I, O> action;
 
   @override
-  Future<void> start(
-      Stream<List<dynamic>> srcIn,
-      Stream<List<dynamic>> srcErr,
-      StreamSink<List<dynamic>> sinkOut,
-      StreamSink<List<dynamic>> sinkErr) async {
+  Future<void> start(Stream<dynamic> srcIn, Stream<dynamic> srcErr,
+      StreamSink<O> sinkOut, StreamSink<O> sinkErr) async {
     await runZonedGuarded(
-        () => action(
-            srcIn.cast<List<I>>(),
-            srcErr.cast<List<I>>(),
-            sinkOut as StreamSink<List<O>>,
-            sinkErr as StreamSink<List<O>>), (e, st) {
+        () => action(srcIn.cast<I>(), srcErr.cast<I>(), sinkOut, sinkErr),
+        (e, st) {
       // TODO(bsutton): what do we do with errors?
     }, zoneSpecification: ZoneSpecification(print: (self, parent, zone, line) {
       stdout.add(line.codeUnits);
     }));
   }
+
+  @override
+  StreamController<O> get errController => StreamController<O>();
+
+  @override
+  StreamController<O> get outController => StreamController<O>();
 }

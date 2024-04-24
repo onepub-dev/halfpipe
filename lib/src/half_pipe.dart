@@ -13,19 +13,19 @@ import 'processors/processor.dart';
 /// only sinkOut and sinkErr will be combined and written
 /// to the external commands stdin.
 typedef Block<I, O> = Future<void> Function(
-    Stream<List<I>> srcIn,
-    Stream<List<I>> srcErr,
-    StreamSink<List<O>> sinkOut,
-    StreamSink<List<O>> sinkErr);
+    Stream<I> srcIn,
+    Stream<I> srcErr,
+    StreamSink<O> sinkOut,
+    StreamSink<O> sinkErr);
 
 class HalfPipe {
   HalfPipe() {
-    initialPipePhase = PipePhase<int>(this);
+    initialPipePhase = PipePhase<List<int>>(this);
   }
 
-  late final PipePhase<int> initialPipePhase;
+  late final PipePhase<List<int>> initialPipePhase;
 
-  PipePhase<int> command(
+  PipePhase<List<int>> command(
     String commandLine, {
     bool runInShell = false,
     bool detached = false,
@@ -60,10 +60,10 @@ class HalfPipe {
         workingDirectory: workingDirectory,
       );
 
-  PipePhase<T> block<T>(Block<int, T> callback) =>
+  PipePhase<T> block<T>(Block<List<int>, T> callback) =>
       initialPipePhase.block<T>(callback);
 
-  PipePhase<int> processor(Processor<int> processor) =>
+  PipePhase<T> processor<T>(Processor<List<int>, T> processor) =>
       initialPipePhase.processor(processor);
 }
 

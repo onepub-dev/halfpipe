@@ -36,7 +36,7 @@ void main() {
             .command('ls', workingDirectory: tempDir)
             .transform(Transform.line)
             // process the output of ls through a block of dart code
-            .block((srcIn, srcErr, stdout, stderr) async {
+            .block<String>((srcIn, srcErr, stdout, stderr) async {
           // TODO(bsutton): line is actually a list of lines.
           // when we call Transform.line we should change the lists to
           // individual lines.
@@ -83,7 +83,8 @@ void main() {
         final pathToZip = join(tempDir, 'some.zip');
         final pipe = HalfPipe() // process as a binary stream.
             .processor(ReadFile(pathToZip))
-            .transform<int>(zlib.decoder) // provides a stream of file entities
+            .transform<List<int>>(
+                zlib.decoder) // provides a stream of file entities
             .write(tempDir); // not certain how this works.
 
         // final dpipe = HalfPipe2()
@@ -113,7 +114,7 @@ void main() {
         await HalfPipe()
             .processor(ReadFile(pathToFile))
             .transform(Transform.line)
-            .processor(Skip(5))
+            .processor<String>(Skip(5))
             .toParagraph();
 
         print('end');

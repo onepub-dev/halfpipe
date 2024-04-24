@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'processor.dart';
 
-class ReadFile extends Processor<int> {
+class ReadFile extends Processor<List<int>, List<int>> {
   ReadFile(this.pathToFile);
   String pathToFile;
 
@@ -20,4 +20,10 @@ class ReadFile extends Processor<int> {
 
     await sinkErr.addStream(srcErr);
   }
+
+  @override
+  StreamController<List<int>> get errController => StreamController<List<int>>();
+
+  @override
+  StreamController<List<int>> get outController => StreamController<List<int>>();
 }
