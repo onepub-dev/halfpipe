@@ -7,7 +7,7 @@ import '../half_pipe.dart';
 import 'pipe_section.dart';
 
 /// The same as a BlockPipeSection however all output
-/// to print or printerr are captured and sent to the sink 
+/// to print or printerr are captured and sent to the sink
 /// controllers of this [PipeSection].
 /// Ideally we would like to capture stdout and stderr
 /// but I'm not certain this is possible.
