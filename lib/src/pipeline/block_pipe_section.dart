@@ -1,7 +1,8 @@
 // ignore_for_file: avoid_returning_this
 
 import 'dart:async';
-import 'dart:io';
+
+import 'package:completer_ex/completer_ex.dart';
 
 import '../half_pipe.dart';
 import 'pipe_section.dart';
@@ -12,20 +13,27 @@ class BlockPipeSection<I, O> extends PipeSection<I, O> {
   Block<I, O> action;
 
   @override
-  Future<void> start(Stream<dynamic> srcIn, Stream<dynamic> srcErr,
-      StreamSink<O> sinkOut, StreamSink<O> sinkErr) async {
-    await runZonedGuarded(
-        () => action(srcIn.cast<I>(), srcErr.cast<I>(), sinkOut, sinkErr),
-        (e, st) {
-      // TODO(bsutton): what do we do with errors?
-    }, zoneSpecification: ZoneSpecification(print: (self, parent, zone, line) {
-      stdout.add(line.codeUnits);
-    }));
+  Future<void> start(Stream<dynamic> srcIn, Stream<dynamic> srcErr
+      ) async {
+    final done = CompleterEx<void>();
+    // ignore: unawaited_futures
+    action(srcIn.cast<I>(), srcErr.cast<I>(), _outController.sink,
+            _errController.sink)
+        .then((_) async {
+      done.complete();
+      await _errController.close();
+      await _outController.close();
+    });
+
+    return done.future;
   }
 
-  @override
-  StreamController<O> get errController => StreamController<O>();
+  late final _errController = StreamController<O>();
+  late final _outController = StreamController<O>();
 
   @override
-  StreamController<O> get outController => StreamController<O>();
+  StreamController<O> get errController => _errController;
+
+  @override
+  StreamController<O> get outController => _outController;
 }

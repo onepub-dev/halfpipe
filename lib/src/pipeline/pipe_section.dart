@@ -4,7 +4,7 @@ import 'dart:async';
 
 // ignore: one_member_abstracts
 abstract class PipeSection<I, O> {
-  StreamController<O> get outController ;
+  StreamController<O> get outController;
 
   StreamController<O> get errController;
 
@@ -16,6 +16,5 @@ abstract class PipeSection<I, O> {
   /// [sinkErr] is where this [PipeSection] writes its 'bad'data.
   /// A Future is returned that completes when this [PipeSection] has completed
   /// generating/processing the [srcIn] and [srcErr] streams.
-  Future<void> start(Stream<I> srcIn, Stream<I> srcErr, StreamSink<O> sinkOut,
-      StreamSink<O> sinkErr);
+  Future<void> start(Stream<I> srcIn, Stream<I> srcErr);
 }

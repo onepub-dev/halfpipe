@@ -8,6 +8,7 @@ environment:
 
 dependencies: 
   async: ^2.11.0
+  completer_ex: ^4.0.0
   dcli: ^4.0.1-beta.4
   dcli_common: ^4.0.1-beta.4
   dcli_core: ^4.0.1-beta.4

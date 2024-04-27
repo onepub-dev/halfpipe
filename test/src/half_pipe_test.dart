@@ -28,6 +28,7 @@ void main() {
       });
     });
     test('block', () async {
+      final list = <String>[];
       await withTempDirAsync((tempDir) async {
         touch(join(tempDir, 'one.txt'), create: true);
         touch(join(tempDir, 'two.txt'), create: true);
@@ -37,44 +38,35 @@ void main() {
             .transform(Transform.line)
             // process the output of ls through a block of dart code
             .block<String>((srcIn, srcErr, stdout, stderr) async {
-          // TODO(bsutton): line is actually a list of lines.
-          // when we call Transform.line we should change the lists to
-          // individual lines.
-
           await for (final line in srcIn) {
-            print('file: $line');
+            list.add(line);
           }
-          printerr('Inside block');
         }).run();
+
+        expect(list.length, equals(2));
+        expect(list.first, equals('one.txt'));
+        expect(list.last, equals('two.txt'));
       });
     });
 
     test('command and block', () async {
-      print('start');
       await HalfPipe()
           .command('ls')
+          .transform(Transform.line)
           // process the output of ls through a block of dart code
           .block((srcIn, srcErr, sinkOut, sinkErr) async {
-            await for (final line in srcIn) {
-              print('file: $line');
-            }
-            printerr('inside block');
-          })
-          // redirect any output to stderr back to stdout
-          .redirectStderr(Redirect.toStdout)
-
-          /// send each line to the 'rm' command - which won't work
-          /// becase of the 'file: prefix
-          .command('rm')
-          // TODO(bsutton): find some way to execute a command for each
-          // line passed to a section.
-          /// A second block of dart code
-          .block<String>((srcIn, _, __, ___) async {
-            await for (final line in srcIn) {
-              print('2nd block: $line');
-            }
-          })
-          .run();
+        await for (final line in srcIn) {
+          print('file: $line');
+          sinkOut.add(line);
+        }
+        printerr('exiting block 1');
+      }).block<String>((srcIn, _, __, ___) async {
+        print('started block 2');
+        await for (final line in srcIn) {
+          print('2nd block: $line');
+        }
+        print('exiting block 2');
+      }).run();
     });
 
     test('half pipe - write', () async {

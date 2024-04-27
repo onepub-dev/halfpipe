@@ -12,22 +12,22 @@ class TransformerPipeSection<I, O> extends PipeSection<I, O> {
 
   @override
   Future<void> start(Stream<dynamic> srcIn, Stream<dynamic> srcErr,
-      StreamSink<O> sinkOut, StreamSink<O> sinkErr) async {
+      ) async {
     final inputConversionSinkForOut =
-        transformer.startChunkedConversion(sinkOut as Sink<O>);
+        transformer.startChunkedConversion(outController.sink as Sink<O>);
     final inputConversionSinkForErr =
-        transformer.startChunkedConversion(sinkErr as Sink<O>);
+        transformer.startChunkedConversion(errController.sink as Sink<O>);
     srcIn.listen((data) {
       inputConversionSinkForOut.add(data as I);
     }, onDone: () {
       inputConversionSinkForOut.close();
-      sinkOut.close();
+      outController.sink.close();
     });
     srcErr.listen((data) {
       inputConversionSinkForErr.add(data as I);
     }, onDone: () {
       inputConversionSinkForErr.close();
-      sinkErr.close();
+      errController.sink.close();
     });
   }
 

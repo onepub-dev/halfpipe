@@ -2,6 +2,8 @@
 
 import 'dart:async';
 
+import 'package:completer_ex/completer_ex.dart';
+
 import '../run_process.dart';
 import 'pipe_section.dart';
 
@@ -39,14 +41,16 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>> {
             workingDirectory: workingDirectory);
 
   RunProcess runProcess;
-  final Completer<bool> _stdoutFlushed = Completer<bool>();
-  final Completer<bool> _stderrFlushed = Completer<bool>();
+  final _stdoutFlushed = CompleterEx<bool>();
+  final _stderrFlushed = CompleterEx<bool>();
 
   int? exitCode;
 
   @override
-  Future<void> start(Stream<dynamic> srcIn, Stream<dynamic> srcErr,
-      StreamSink<dynamic> sinkOut, StreamSink<dynamic> sinkErr) async {
+  Future<void> start(
+    Stream<dynamic> srcIn,
+    Stream<dynamic> srcErr,
+  ) async {
     /// Feed data from the prior [PipeSection] into
     /// our running process.
     srcIn.listen((line) => runProcess.stdin.write(line));
@@ -55,25 +59,17 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>> {
 
     /// Feed data from our running process to the next [PipeSection].
     runProcess.stdout
-        // .transform(utf8.decoder)
-        // .transform(const LineSplitter())
-        .listen((data) {
-      // print('adding: $data');
-      sinkOut.add(data);
-    }).onDone(() async {
-      await sinkOut.close();
+        .listen(outController.add)
+        .onDone(() async {
       _stdoutFlushed.complete(true);
+      await outController.close();
     });
 
     runProcess.stderr
-        // .transform(utf8.decoder)
-        // .transform(const LineSplitter())
-        .listen((data) {
-      // print('err: $data');
-      sinkErr.add(data);
-    }).onDone(() async {
-      await sinkErr.close();
+        .listen(errController.add)
+        .onDone(() async {
       _stderrFlushed.complete(true);
+      await errController.close();
     });
 
     // If we wait now then we stop the next stage in the pipeline
@@ -83,7 +79,9 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>> {
 
     unawaited(Future.wait<void>(
             [_stdoutFlushed.future, _stderrFlushed.future, runProcess.exitCode])
-        .then((value) => done.complete()));
+        .then((value) {
+          done.complete();
+        }));
 
     /// when all the streams are flushed and the process has exited.
     return done.future;

@@ -9,7 +9,7 @@ class ReadFile extends Processor<List<int>, List<int>> {
 
   @override
   Future<void> start(Stream<List<int>> srcIn, Stream<List<int>> srcErr,
-      StreamSink<List<int>> sinkOut, StreamSink<List<int>> sinkErr) async {
+      ) async {
     // Read the file as a list of strings
     final ras = File(pathToFile).open();
 
@@ -18,7 +18,7 @@ class ReadFile extends Processor<List<int>, List<int>> {
       stdout.write(event);
     });
 
-    await sinkErr.addStream(srcErr);
+    await errController.sink.addStream(srcErr);
   }
 
   @override

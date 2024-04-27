@@ -9,13 +9,12 @@ class Transform<I, O> extends Transformer<I, O> {
   Converter<I, O> converter;
 
   @override
-  Future<void> start(Stream<I> srcIn, Stream<I> srcErr, StreamSink<O> sinkOut,
-      StreamSink<O> sinkErr) async {
+  Future<void> start(Stream<I> srcIn, Stream<I> srcErr) async {
     srcIn.transform(converter).listen((event) {
-      sinkOut.add(event);
+      outController.sink.add(event);
     }, onDone: () async {
-      await sinkOut.close();
-      await sinkErr.close();
+      await outController.sink.close();
+      await errController.sink.close();
     });
   }
 

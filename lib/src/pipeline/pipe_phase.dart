@@ -164,61 +164,57 @@ class PipePhase<T> {
   // and then run the pipeline.
   Future<void> run() async {
     final stdinController = StreamController<dynamic>();
-    var priorOutController = stdinController;
 
     stdin.listen((data) => stdinController.sink.add(data));
+
+    /// Wire the process's stdin as the first
+    /// section's input
+    var priorOutController = stdinController;
 
     /// The first section has no error inputs so wire in
     /// an empty stream.
     var priorErrController = StreamController<dynamic>();
     // final controllersToClose = <StreamController<dynamic>>[];
 
-    late StreamController<dynamic> nextOutController;
-    late StreamController<dynamic> nextErrController;
+    // late StreamController<dynamic> nextOutController;
+    // late StreamController<dynamic> nextErrController;
 
     final sectionCompleters = <Future>[];
 
     for (var i = 0; i < sections.length; i++) {
       final section = sections[i];
 
-      if (i < sections.length - 1) {
-        nextOutController = sections[i].outController;
-        nextErrController = sections[i].errController;
-      } else {
-        // If we are on the last section then
-        // wire it to the final output controllers
-        nextOutController = sinkOutController;
-        nextErrController = sinkErrController;
-      }
+      final sectionCompleter = section.start(
+        priorOutController.stream,
+        priorErrController.stream,
+      );
+      sectionCompleters.add(sectionCompleter);
+
+      priorOutController = sections[i].outController;
+      priorErrController = sections[i].errController;
       // ignore: close_sinks
       // final nextIn = StreamController<dynamic>();
       // ignore: close_sinks
+      // controllersToClose.addAll([nextOutController, nextErrController]);
       // final nextErr = StreamController<dynamic>();
-      // controllersToClose.addAll([nextIn, nextErr]);
-
-      final sectionCompleter = section.start(
-          priorOutController.stream,
-          priorErrController.stream,
-          nextOutController.sink,
-          nextErrController.sink);
-      sectionCompleters.add(sectionCompleter);
-
-      priorOutController = nextOutController;
-      priorErrController = nextErrController;
 
       // priorSrcIn = nextIn.stream;
       // priorSrcErr = nextErr.stream;
     }
+
+    // Wire the last section to the final output controllers
+    await sinkOutController.addStream(priorOutController.stream.cast<T>());
+    await sinkErrController.addStream(priorErrController.stream.cast<T>());
+
+    /// Wait for all sections to process the data through.
+    await Future.wait(sectionCompleters);
 
     /// TODO: work out when to close these. We can't do it until all the data
     /// has been processed.
     // for (final controller in controllersToClose) {
     //   await controller.close();
     // }
-    // await stdinController.close();
-
-    /// Wait for all sections to process the data through.
-    await Future.wait(sectionCompleters);
+    await stdinController.close();
   }
 
   PipePhase<O> _changeType<I, O>(PipePhase<I> src) {

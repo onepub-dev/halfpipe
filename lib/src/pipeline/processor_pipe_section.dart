@@ -11,9 +11,8 @@ class ProcessorPipeSection<I, O> extends PipeSection<I, O> {
   Processor<I, O> transformer;
 
   @override
-  Future<void> start(Stream<I> srcIn, Stream<I> srcErr, StreamSink<O> sinkOut,
-      StreamSink<O> sinkErr) async {
-    await transformer.start(srcIn, srcErr, sinkOut, sinkErr);
+  Future<void> start(Stream<I> srcIn, Stream<I> srcErr) async {
+    await transformer.start(srcIn, srcErr);
   }
 
   @override
