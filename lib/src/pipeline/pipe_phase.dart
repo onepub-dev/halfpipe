@@ -106,6 +106,7 @@ class PipePhase<T> {
     final elements = <T>[];
 
     sinkOutController.stream.cast<T>().listen((data) {
+      core.print('toList add');
       if (elements.length < maxBuffer) {
         // Add the new data
         elements.add(data);
@@ -174,6 +175,7 @@ class PipePhase<T> {
     /// The first section has no error inputs so wire in
     /// an empty stream.
     var priorErrController = StreamController<dynamic>();
+    // await priorErrController.sink.close();
     // final controllersToClose = <StreamController<dynamic>>[];
 
     // late StreamController<dynamic> nextOutController;
@@ -181,17 +183,15 @@ class PipePhase<T> {
 
     final sectionCompleters = <Future>[];
 
-    for (var i = 0; i < sections.length; i++) {
-      final section = sections[i];
-
+    for (final section in sections) {
       final sectionCompleter = section.start(
         priorOutController.stream,
         priorErrController.stream,
       );
       sectionCompleters.add(sectionCompleter);
 
-      priorOutController = sections[i].outController;
-      priorErrController = sections[i].errController;
+      priorOutController = section.outController;
+      priorErrController = section.errController;
       // ignore: close_sinks
       // final nextIn = StreamController<dynamic>();
       // ignore: close_sinks
@@ -203,8 +203,16 @@ class PipePhase<T> {
     }
 
     // Wire the last section to the final output controllers
-    await sinkOutController.addStream(priorOutController.stream.cast<T>());
-    await sinkErrController.addStream(priorErrController.stream.cast<T>());
+    // await sinkOutController.addStream(priorOutController.stream.cast<T>());
+    // await sinkErrController.addStream(priorErrController.stream.cast<T>());
+
+    priorOutController.stream
+        .listen((data) => sinkOutController.sink.add(data as T));
+    priorErrController.stream
+        .listen((data) => sinkErrController.sink.add(data as T));
+
+    // await sinkOutController.addStream(priorOutController.stream.cast<T>());
+    // await sinkErrController.addStream(priorErrController.stream.cast<T>());
 
     /// Wait for all sections to process the data through.
     await Future.wait(sectionCompleters);

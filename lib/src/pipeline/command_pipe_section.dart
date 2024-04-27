@@ -41,8 +41,6 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>> {
             workingDirectory: workingDirectory);
 
   RunProcess runProcess;
-  final _stdoutFlushed = CompleterEx<bool>();
-  final _stderrFlushed = CompleterEx<bool>();
 
   int? exitCode;
 
@@ -57,17 +55,16 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>> {
     srcErr.listen((line) => runProcess.stdin.write(line));
     await runProcess.start();
 
+    final _stdoutFlushed = CompleterEx<bool>();
+
     /// Feed data from our running process to the next [PipeSection].
-    runProcess.stdout
-        .listen(outController.add)
-        .onDone(() async {
+    runProcess.stdout.listen(outController.add).onDone(() async {
       _stdoutFlushed.complete(true);
       await outController.close();
     });
 
-    runProcess.stderr
-        .listen(errController.add)
-        .onDone(() async {
+    final _stderrFlushed = CompleterEx<bool>();
+    runProcess.stderr.listen(errController.add).onDone(() async {
       _stderrFlushed.complete(true);
       await errController.close();
     });
@@ -80,8 +77,8 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>> {
     unawaited(Future.wait<void>(
             [_stdoutFlushed.future, _stderrFlushed.future, runProcess.exitCode])
         .then((value) {
-          done.complete();
-        }));
+      done.complete();
+    }));
 
     /// when all the streams are flushed and the process has exited.
     return done.future;
