@@ -2,13 +2,13 @@
 
 import 'dart:async';
 
-import 'package:completer_ex/completer_ex.dart';
+import '../util/stream_controller_ex.dart';
 
 // ignore: one_member_abstracts
 abstract class PipeSection<I, O> {
-  StreamController<O> get outController;
+  StreamControllerEx<O> get outController;
 
-  StreamController<O> get errController;
+  StreamControllerEx<O> get errController;
 
   /// Runs the defined action passing in data from the previous [PipeSection]
   /// and passing data out to the next [PipeSection].

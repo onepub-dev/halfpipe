@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:completer_ex/completer_ex.dart';
 
+import '../util/stream_controller_ex.dart';
 import 'processor.dart';
 
 class ReadFile extends Processor<List<int>, List<int>> {
@@ -32,10 +33,10 @@ class ReadFile extends Processor<List<int>, List<int>> {
   }
 
   @override
-  StreamController<List<int>> get errController =>
-      StreamController<List<int>>();
+  StreamControllerEx<List<int>> get errController =>
+      StreamControllerEx<List<int>>(debugName: 'readfile: err');
 
   @override
-  StreamController<List<int>> get outController =>
-      StreamController<List<int>>();
+  StreamControllerEx<List<int>> get outController =>
+      StreamControllerEx<List<int>>(debugName: 'readfile: out');
 }

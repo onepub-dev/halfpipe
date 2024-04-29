@@ -5,6 +5,7 @@ import 'dart:convert';
 
 import 'package:completer_ex/completer_ex.dart';
 
+import '../util/stream_controller_ex.dart';
 import 'pipe_section.dart';
 
 class TransformerPipeSection<I, O> extends PipeSection<I, O> {
@@ -54,8 +55,10 @@ class TransformerPipeSection<I, O> extends PipeSection<I, O> {
   }
 
   @override
-  StreamController<O> get errController => StreamController<O>();
+  StreamControllerEx<O> get errController =>
+      StreamControllerEx<O>(debugName: 'transformer: err');
 
   @override
-  StreamController<O> get outController => StreamController<O>();
+  StreamControllerEx<O> get outController =>
+      StreamControllerEx<O>(debugName: 'transformer: out');
 }

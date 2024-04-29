@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:completer_ex/completer_ex.dart';
 
+import '../util/stream_controller_ex.dart';
 import 'processor.dart';
 
 class PassThrough<I, O> extends Processor<I, O> {
@@ -30,8 +31,10 @@ class PassThrough<I, O> extends Processor<I, O> {
   }
 
   @override
-  StreamController<O> get errController => StreamController<O>();
+  StreamControllerEx<O> get errController =>
+      StreamControllerEx<O>(debugName: 'pass through: err');
 
   @override
-  StreamController<O> get outController => StreamController<O>();
+  StreamControllerEx<O> get outController =>
+      StreamControllerEx<O>(debugName: 'pass through: out');
 }

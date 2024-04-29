@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:completer_ex/completer_ex.dart';
 
 import '../processors/processor.dart';
+import '../util/stream_controller_ex.dart';
 import 'pipe_section.dart';
 
 class ProcessorPipeSection<I, O> extends PipeSection<I, O> {
@@ -17,8 +18,10 @@ class ProcessorPipeSection<I, O> extends PipeSection<I, O> {
       transformer.start(srcIn, srcErr);
 
   @override
-  StreamController<O> get errController => StreamController<O>();
+  StreamControllerEx<O> get errController =>
+      StreamControllerEx<O>(debugName: 'Processor: err');
 
   @override
-  StreamController<O> get outController => StreamController<O>();
+  StreamControllerEx<O> get outController =>
+      StreamControllerEx<O>(debugName: 'Processor: out');
 }

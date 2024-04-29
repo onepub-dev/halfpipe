@@ -1,6 +1,5 @@
 // ignore_for_file: avoid_returning_this, strict_raw_type
 
-import 'dart:async';
 import 'dart:convert';
 import 'dart:core' as core;
 import 'dart:core';
@@ -11,6 +10,7 @@ import 'package:completer_ex/completer_ex.dart';
 
 import '../half_pipe.dart';
 import '../processors/processor.dart';
+import '../util/stream_controller_ex.dart';
 import 'block_pipe_section.dart';
 import 'command_pipe_section.dart';
 import 'pipe_section.dart';
@@ -159,13 +159,16 @@ class PipePhase<T> {
 
   /// The output of the final phase is funnelled into
   /// these two controllers.
-  StreamController<T> sinkOutController = StreamController<T>();
-  StreamController<T> sinkErrController = StreamController<T>();
+  StreamControllerEx<T> sinkOutController =
+      StreamControllerEx<T>(debugName: 'final: out');
+  StreamControllerEx<T> sinkErrController =
+      StreamControllerEx<T>(debugName: 'final err');
 
   // Wire up the [PipeSection]s by attaching their streams
   // and then run the pipeline.
   Future<void> run() async {
-    final stdinController = StreamController<dynamic>();
+    final stdinController =
+        StreamControllerEx<dynamic>(debugName: 'stdin of main process');
 
     stdin.listen((data) => stdinController.sink.add(data));
 
@@ -175,12 +178,13 @@ class PipePhase<T> {
 
     /// The first section has no error inputs so wire in
     /// an empty stream.
-    var priorErrController = StreamController<dynamic>();
+    var priorErrController =
+        StreamControllerEx<dynamic>(debugName: 'dummy stdin - error channel');
     // await priorErrController.sink.close();
-    // final controllersToClose = <StreamController<dynamic>>[];
+    // final controllersToClose = <StreamControllerEx<dynamic>>[];
 
-    // late StreamController<dynamic> nextOutController;
-    // late StreamController<dynamic> nextErrController;
+    // late StreamControllerEx<dynamic> nextOutController;
+    // late StreamControllerEx<dynamic> nextErrController;
 
     final sectionCompleters = <CompleterEx<void>>[];
 
@@ -194,10 +198,10 @@ class PipePhase<T> {
       priorOutController = section.outController;
       priorErrController = section.errController;
       // ignore: close_sinks
-      // final nextIn = StreamController<dynamic>();
+      // final nextIn = StreamControllerEx<dynamic>();
       // ignore: close_sinks
       // controllersToClose.addAll([nextOutController, nextErrController]);
-      // final nextErr = StreamController<dynamic>();
+      // final nextErr = StreamControllerEx<dynamic>();
 
       // priorSrcIn = nextIn.stream;
       // priorSrcErr = nextErr.stream;

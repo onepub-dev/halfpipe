@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:completer_ex/completer_ex.dart';
 
+import '../util/stream_controller_ex.dart';
 import 'processor.dart';
 
 class Skip extends Processor<String, String> {
@@ -33,8 +34,10 @@ class Skip extends Processor<String, String> {
   }
 
   @override
-  StreamController<String> get errController => StreamController<String>();
+  StreamControllerEx<String> get errController =>
+      StreamControllerEx<String>(debugName: 'skip: err');
 
   @override
-  StreamController<String> get outController => StreamController<String>();
+  StreamControllerEx<String> get outController =>
+      StreamControllerEx<String>(debugName: 'skip: out');
 }
