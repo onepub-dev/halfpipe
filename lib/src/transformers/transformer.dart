@@ -4,6 +4,7 @@ import 'package:completer_ex/completer_ex.dart';
 
 import '../pipeline/pipe_section.dart';
 import '../processors/processor.dart';
+import '../util/stream_controller_ex.dart';
 
 /// A Transformer is a type of [PipeSection] that can transform
 /// data. Any transformation is allowed including injecting additional
@@ -18,7 +19,7 @@ import '../processors/processor.dart';
 abstract class Transformer<I, O> extends PipeSection<I, O> {
   @override
   Future<CompleterEx<void>> start(
-    Stream<I> srcIn,
-    Stream<I> srcErr,
+    StreamControllerEx<I> srcIn,
+    StreamControllerEx<I> srcErr,
   );
 }

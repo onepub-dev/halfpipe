@@ -18,20 +18,21 @@ class Tee<T> extends Processor<T, T> {
   PassThrough<T, T> injector = PassThrough();
   PipePhase<T> other;
   @override
-  Future<CompleterEx<void>> start(Stream<T> srcIn, Stream<T> srcErr) async {
+  Future<CompleterEx<void>> start(
+      StreamControllerEx<T> srcIn, StreamControllerEx<T> srcErr) async {
     final inCompleter = CompleterEx<void>(debugName: 'Tee:Stdout');
-    srcIn.listen((line) {
+    srcIn.stream.listen((line) {
       stdout.writeln(line);
     })
       ..onDone(inCompleter.complete)
       ..onError(inCompleter.completeError);
 
-    await injector.outController.sink.addStream(srcIn);
+    await injector.outController.addStream(srcIn.stream);
 
     final errCompleter = CompleterEx<void>(debugName: 'Tee:Stdout');
-    srcErr.listen((line) {
+    srcErr.stream.listen((line) {
       stderr.writeln(line);
-      injector.errController.sink.add(line);
+      injector.errController.add(line);
     })
       ..onDone(errCompleter.complete)
       ..onError(errCompleter.completeError);
@@ -45,10 +46,5 @@ class Tee<T> extends Processor<T, T> {
   }
 
   @override
-  StreamControllerEx<T> get errController =>
-      StreamControllerEx<T>(debugName: 'test: err');
-
-  @override
-  StreamControllerEx<T> get outController =>
-      StreamControllerEx<T>(debugName: 'test: out');
+  String get debugName => 'tee';
 }

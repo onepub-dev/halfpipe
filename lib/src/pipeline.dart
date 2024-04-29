@@ -73,10 +73,12 @@ class Pipeline {
     stderr = stderrController.sink;
   }
 
-  late final stdoutController = StreamControllerEx<List<int>>(debugName: 'stdout');
+  late final stdoutController =
+      StreamControllerEx<List<int>>(debugName: 'stdout');
   late final StreamSink<List<int>> stdout;
 
-  late final stderrController = StreamControllerEx<List<int>>(debugName: 'stderr');
+  late final stderrController =
+      StreamControllerEx<List<int>>(debugName: 'stderr');
   late final StreamSink<List<int>> stderr;
 
   Future<void> close() async {

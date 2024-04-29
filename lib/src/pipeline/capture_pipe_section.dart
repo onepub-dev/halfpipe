@@ -21,15 +21,15 @@ class CapturePipeSection<I, O> extends PipeSection<I, O> {
 
   @override
   Future<CompleterEx<void>> start(
-    Stream<dynamic> srcIn,
-    Stream<dynamic> srcErr,
+    StreamControllerEx<I> srcIn,
+    StreamControllerEx<I> srcErr,
   ) async {
     final completed = CompleterEx<void>(debugName: 'CaptureSection');
     await runZonedGuarded(() async {
-      await action(srcIn.cast<I>(), srcErr.cast<I>(), outController.sink,
-          errController.sink);
+      await action(srcIn.stream.cast<I>(), srcErr.stream.cast<I>(),
+          outController.sink, errController.sink);
       completed.complete();
-    // ignore: unnecessary_lambdas
+      // ignore: unnecessary_lambdas
     }, (e, st) {
       // TODO(bsutton): what do we do with errors?
       completed.completeError(e, st);
@@ -41,10 +41,5 @@ class CapturePipeSection<I, O> extends PipeSection<I, O> {
   }
 
   @override
-  StreamControllerEx<O> get errController =>
-      StreamControllerEx<O>(debugName: 'capture: err');
-
-  @override
-  StreamControllerEx<O> get outController =>
-      StreamControllerEx<O>(debugName: 'capture; out');
+  String get debugName => 'capture';
 }

@@ -190,8 +190,8 @@ class PipePhase<T> {
 
     for (final section in sections) {
       final sectionCompleter = await section.start(
-        priorOutController.stream,
-        priorErrController.stream,
+        priorOutController,
+        priorErrController,
       );
       sectionCompleters.add(sectionCompleter);
 
@@ -212,9 +212,9 @@ class PipePhase<T> {
     // await sinkErrController.addStream(priorErrController.stream.cast<T>());
 
     priorOutController.stream
-        .listen((data) => sinkOutController.sink.add(data as T));
+        .listen((data) => sinkOutController.add(data as T));
     priorErrController.stream
-        .listen((data) => sinkErrController.sink.add(data as T));
+        .listen((data) => sinkErrController.add(data as T));
 
     // await sinkOutController.addStream(priorOutController.stream.cast<T>());
     // await sinkErrController.addStream(priorErrController.stream.cast<T>());
@@ -229,6 +229,10 @@ class PipePhase<T> {
     //   await controller.close();
     // }
     await stdinController.close();
+
+    for (final section in sections) {
+      await section.close();
+    }
   }
 
   PipePhase<O> _changeType<I, O>(PipePhase<I> src) {

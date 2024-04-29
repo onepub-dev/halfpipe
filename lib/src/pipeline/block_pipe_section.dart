@@ -14,27 +14,19 @@ class BlockPipeSection<I, O> extends PipeSection<I, O> {
   Block<I, O> action;
 
   @override
-  Future<CompleterEx<void>> start(
-      Stream<dynamic> srcIn, Stream<dynamic> srcErr) async {
+  Future<CompleterEx<void>> start(StreamControllerEx<dynamic> srcIn,
+      StreamControllerEx<dynamic> srcErr) async {
     final done = CompleterEx<void>(debugName: 'BlockSection');
     // ignore: unawaited_futures
-    action(srcIn.cast<I>(), srcErr.cast<I>(), _outController.sink,
-            _errController.sink)
+    action(srcIn.stream.cast<I>(), srcErr.stream.cast<I>(), outController.sink,
+            errController.sink)
         .then((_) async {
       done.complete();
-      await _errController.close();
-      await _outController.close();
     });
 
     return done;
   }
 
-  late final _errController = StreamControllerEx<O>(debugName: 'block: err');
-  late final _outController = StreamControllerEx<O>(debugName: 'block: out');
-
   @override
-  StreamControllerEx<O> get errController => _errController;
-
-  @override
-  StreamControllerEx<O> get outController => _outController;
+  String get debugName => 'block';
 }

@@ -8,16 +8,17 @@ import 'processor.dart';
 
 class PassThrough<I, O> extends Processor<I, O> {
   @override
-  Future<CompleterEx<void>> start(Stream<I> srcIn, Stream<I> srcErr) async {
+  Future<CompleterEx<void>> start(
+      StreamControllerEx<I> srcIn, StreamControllerEx<I> srcErr) async {
     final inCompleter = CompleterEx<void>(debugName: 'PassThrough: In');
-    srcIn.listen((line) {
+    srcIn.stream.listen((line) {
       stdout.writeln(line);
     })
       ..onDone(inCompleter.complete)
       ..onError(inCompleter.completeError);
 
     final errCompleter = CompleterEx<void>(debugName: 'PassThrough: Err');
-    srcErr.listen((line) {
+    srcErr.stream.listen((line) {
       stderr.writeln(line);
     })
       ..onDone(errCompleter.complete)
@@ -31,10 +32,5 @@ class PassThrough<I, O> extends Processor<I, O> {
   }
 
   @override
-  StreamControllerEx<O> get errController =>
-      StreamControllerEx<O>(debugName: 'pass through: err');
-
-  @override
-  StreamControllerEx<O> get outController =>
-      StreamControllerEx<O>(debugName: 'pass through: out');
+  String get debugName => 'pass through';
 }

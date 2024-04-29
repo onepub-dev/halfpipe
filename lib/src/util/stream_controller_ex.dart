@@ -17,6 +17,9 @@ class StreamControllerEx<T> implements StreamController<T> {
         onResume: onResume,
         onCancel: onCancel,
         sync: sync);
+    _controller.onListen = () {
+      print('Listener added to : $debugName');
+    };
   }
 
   late final StreamController<T> _controller;
@@ -50,7 +53,10 @@ class StreamControllerEx<T> implements StreamController<T> {
       _controller.addStream(source, cancelOnError: cancelOnError);
 
   @override
-  Future<dynamic> close() => _controller.close();
+  Future<dynamic> close() {
+    print('closing $debugName');
+    return _controller.close();
+  }
 
   @override
   Future<dynamic> get done => _controller.done;

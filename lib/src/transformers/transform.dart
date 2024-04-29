@@ -12,9 +12,10 @@ class Transform<I, O> extends Transformer<I, O> {
   Converter<I, O> converter;
 
   @override
-  Future<CompleterEx<void>> start(Stream<I> srcIn, Stream<I> srcErr) async {
+  Future<CompleterEx<void>> start(
+      StreamControllerEx<I> srcIn, StreamControllerEx<I> srcErr) async {
     final done = CompleterEx<void>(debugName: 'Transform');
-    srcIn.transform(converter).listen((event) {
+    srcIn.stream.transform(converter).listen((event) {
       outController.sink.add(event);
     }, onDone: () async {
       await outController.sink.close();
@@ -25,13 +26,8 @@ class Transform<I, O> extends Transformer<I, O> {
     return done;
   }
 
-  @override
-  StreamControllerEx<O> get errController =>
-      StreamControllerEx<O>(debugName: 'tranform: err');
-
-  @override
-  StreamControllerEx<O> get outController =>
-      StreamControllerEx<O>(debugName: 'transform: out');
-
   static Utf8LineSplitter get line => Utf8LineSplitter();
+
+  @override
+  String get debugName => 'transform';
 }

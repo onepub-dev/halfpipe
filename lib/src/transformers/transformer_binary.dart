@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:completer_ex/completer_ex.dart';
 
 import '../pipeline/pipe_section.dart';
+import '../util/stream_controller_ex.dart';
 
 /// A [TransformerBinary] is a type of [PipeSection] that can transform
 /// data. Any transformation is allowed including injecting additional
@@ -12,6 +13,6 @@ import '../pipeline/pipe_section.dart';
 /// can write additional [TransformerBinary]s.
 abstract class TransformerBinary extends PipeSection<List<int>, List<int>> {
   @override
-  Future<CompleterEx<void>> start(
-      Stream<List<int>> srcIn, Stream<List<int>> srcErr);
+  Future<CompleterEx<void>> start(StreamControllerEx<List<int>> srcIn,
+      StreamControllerEx<List<int>> srcErr);
 }

@@ -14,14 +14,10 @@ class ProcessorPipeSection<I, O> extends PipeSection<I, O> {
   Processor<I, O> transformer;
 
   @override
-  Future<CompleterEx<void>> start(Stream<I> srcIn, Stream<I> srcErr) async =>
+  Future<CompleterEx<void>> start(
+          StreamControllerEx<I> srcIn, StreamControllerEx<I> srcErr) async =>
       transformer.start(srcIn, srcErr);
 
   @override
-  StreamControllerEx<O> get errController =>
-      StreamControllerEx<O>(debugName: 'Processor: err');
-
-  @override
-  StreamControllerEx<O> get outController =>
-      StreamControllerEx<O>(debugName: 'Processor: out');
+  String get debugName => 'proscessor';
 }

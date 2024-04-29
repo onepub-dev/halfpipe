@@ -47,13 +47,13 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>> {
 
   @override
   Future<CompleterEx<void>> start(
-    Stream<dynamic> srcIn,
-    Stream<dynamic> srcErr,
+    StreamControllerEx<dynamic> srcIn,
+    StreamControllerEx<dynamic> srcErr,
   ) async {
     /// Feed data from the prior [PipeSection] into
     /// our running process.
-    srcIn.listen((line) => runProcess.stdin.write(line));
-    srcErr.listen((line) => runProcess.stdin.write(line));
+    srcIn.stream.listen((line) => runProcess.stdin.write(line));
+    srcErr.stream.listen((line) => runProcess.stdin.write(line));
     await runProcess.start();
 
     final _stdoutFlushed =
@@ -62,17 +62,17 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>> {
     /// Feed data from our running process to the next [PipeSection].
     runProcess.stdout.listen((data) {
       print('process: sending data: ${data.length}');
-      outController.add(data);
+      outController.sink.add(data);
     }).onDone(() async {
-      _stdoutFlushed.complete(true);
-      await outController.close();
+      _stdoutFlushed.complete();
+      // await outController.close();
     });
 
     final _stderrFlushed =
         CompleterEx<void>(debugName: 'CommandSection - stderr');
     runProcess.stderr.listen(errController.add).onDone(() async {
       _stderrFlushed.complete();
-      await errController.close();
+      // await errController.close();
     });
 
     // If we wait now then we stop the next stage in the pipeline
@@ -91,10 +91,5 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>> {
   }
 
   @override
-  StreamControllerEx<List<int>> get errController =>
-      StreamControllerEx<List<int>>(debugName: 'command: err');
-
-  @override
-  StreamControllerEx<List<int>> get outController =>
-      StreamControllerEx<List<int>>(debugName: 'command: out');
+  String get debugName => 'command';
 }

@@ -15,8 +15,8 @@ class TransformerPipeSection<I, O> extends PipeSection<I, O> {
 
   @override
   Future<CompleterEx<void>> start(
-    Stream<dynamic> srcIn,
-    Stream<dynamic> srcErr,
+    StreamControllerEx<dynamic> srcIn,
+    StreamControllerEx<dynamic> srcErr,
   ) async {
     final outCompleter = CompleterEx<bool>(debugName: 'TransformerPipe: out');
     final errCompleter = CompleterEx<bool>(debugName: 'TransformerPipe: err');
@@ -25,15 +25,15 @@ class TransformerPipeSection<I, O> extends PipeSection<I, O> {
         transformer.startChunkedConversion(outController.sink);
     final inputConversionSinkForErr =
         transformer.startChunkedConversion(errController.sink);
-    srcIn.listen((data) {
+    srcIn.stream.listen((data) {
       print('Transformer: addIn');
       inputConversionSinkForOut.add(data as I);
     }, onDone: () {
       inputConversionSinkForOut.close();
-      outController.sink.close();
+      // outController.sink.close();
       outCompleter.complete(true);
     }, onError: outCompleter.completeError);
-    srcErr.listen((data) {
+    srcErr.stream.listen((data) {
       print('Transformer: addErr');
       inputConversionSinkForErr.add(data as I);
     }, onDone: () {
@@ -55,10 +55,5 @@ class TransformerPipeSection<I, O> extends PipeSection<I, O> {
   }
 
   @override
-  StreamControllerEx<O> get errController =>
-      StreamControllerEx<O>(debugName: 'transformer: err');
-
-  @override
-  StreamControllerEx<O> get outController =>
-      StreamControllerEx<O>(debugName: 'transformer: out');
+  String get debugName => 'transformer';
 }
