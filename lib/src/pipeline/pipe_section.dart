@@ -2,6 +2,8 @@
 
 import 'dart:async';
 
+import 'package:completer_ex/completer_ex.dart';
+
 // ignore: one_member_abstracts
 abstract class PipeSection<I, O> {
   StreamController<O> get outController;
@@ -16,5 +18,5 @@ abstract class PipeSection<I, O> {
   /// [errController] is where this [PipeSection] writes its 'bad'data.
   /// A Future is returned that completes when this [PipeSection] has completed
   /// generating/processing the [srcIn] and [srcErr] streams.
-  Future<void> start(Stream<I> srcIn, Stream<I> srcErr);
+  Future<CompleterEx<void>> start(Stream<I> srcIn, Stream<I> srcErr);
 }

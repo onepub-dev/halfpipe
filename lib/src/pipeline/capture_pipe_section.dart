@@ -3,6 +3,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:completer_ex/completer_ex.dart';
+
 import '../half_pipe.dart';
 import 'pipe_section.dart';
 
@@ -17,17 +19,24 @@ class CapturePipeSection<I, O> extends PipeSection<I, O> {
   Block<I, O> action;
 
   @override
-  Future<void> start(
+  Future<CompleterEx<void>> start(
     Stream<dynamic> srcIn,
     Stream<dynamic> srcErr,
   ) async {
-    await runZonedGuarded(
-        () => action(srcIn.cast<I>(), srcErr.cast<I>(), outController.sink,
-            errController.sink), (e, st) {
+    final completed = CompleterEx<void>(debugName: 'CaptureSection');
+    await runZonedGuarded(() async {
+      await action(srcIn.cast<I>(), srcErr.cast<I>(), outController.sink,
+          errController.sink);
+      completed.complete();
+    // ignore: unnecessary_lambdas
+    }, (e, st) {
       // TODO(bsutton): what do we do with errors?
+      completed.completeError(e, st);
     }, zoneSpecification: ZoneSpecification(print: (self, parent, zone, line) {
       stdout.add(line.codeUnits);
     }));
+
+    return completed;
   }
 
   @override

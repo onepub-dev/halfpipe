@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:completer_ex/completer_ex.dart';
+
 import '../pipeline/pipe_section.dart';
 import '../processors/processor.dart';
 
@@ -15,7 +17,7 @@ import '../processors/processor.dart';
 /// can write additional [Transformer]s.
 abstract class Transformer<I, O> extends PipeSection<I, O> {
   @override
-  Future<void> start(
+  Future<CompleterEx<void>> start(
     Stream<I> srcIn,
     Stream<I> srcErr,
   );

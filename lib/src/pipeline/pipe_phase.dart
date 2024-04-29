@@ -7,6 +7,7 @@ import 'dart:core';
 import 'dart:io';
 
 import 'package:async/async.dart';
+import 'package:completer_ex/completer_ex.dart';
 
 import '../half_pipe.dart';
 import '../processors/processor.dart';
@@ -181,10 +182,10 @@ class PipePhase<T> {
     // late StreamController<dynamic> nextOutController;
     // late StreamController<dynamic> nextErrController;
 
-    final sectionCompleters = <Future>[];
+    final sectionCompleters = <CompleterEx<void>>[];
 
     for (final section in sections) {
-      final sectionCompleter = section.start(
+      final sectionCompleter = await section.start(
         priorOutController.stream,
         priorErrController.stream,
       );
@@ -215,7 +216,8 @@ class PipePhase<T> {
     // await sinkErrController.addStream(priorErrController.stream.cast<T>());
 
     /// Wait for all sections to process the data through.
-    await Future.wait(sectionCompleters);
+    await Future.wait<void>(
+        sectionCompleters.map<Future>((e) => e.future).toList());
 
     /// TODO: work out when to close these. We can't do it until all the data
     /// has been processed.

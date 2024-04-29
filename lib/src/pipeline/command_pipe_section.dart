@@ -45,7 +45,7 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>> {
   int? exitCode;
 
   @override
-  Future<void> start(
+  Future<CompleterEx<void>> start(
     Stream<dynamic> srcIn,
     Stream<dynamic> srcErr,
   ) async {
@@ -55,24 +55,26 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>> {
     srcErr.listen((line) => runProcess.stdin.write(line));
     await runProcess.start();
 
-    final _stdoutFlushed = CompleterEx<bool>();
+    final _stdoutFlushed =
+        CompleterEx<void>(debugName: 'CommandSection - stdout');
 
     /// Feed data from our running process to the next [PipeSection].
     runProcess.stdout.listen(outController.add).onDone(() async {
-      _stdoutFlushed.complete(true);
+      _stdoutFlushed.complete();
       await outController.close();
     });
 
-    final _stderrFlushed = CompleterEx<bool>();
+    final _stderrFlushed =
+        CompleterEx<void>(debugName: 'CommandSection - stderr');
     runProcess.stderr.listen(errController.add).onDone(() async {
-      _stderrFlushed.complete(true);
+      _stderrFlushed.complete();
       await errController.close();
     });
 
     // If we wait now then we stop the next stage in the pipeline
     // from running.
     // exitCode = await runProcess.exitCode;
-    final done = Completer<void>();
+    final done = CompleterEx<void>(debugName: 'CommandPipe: done');
 
     unawaited(Future.wait<void>(
             [_stdoutFlushed.future, _stderrFlushed.future, runProcess.exitCode])
@@ -81,7 +83,7 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>> {
     }));
 
     /// when all the streams are flushed and the process has exited.
-    return done.future;
+    return done;
   }
 
   @override

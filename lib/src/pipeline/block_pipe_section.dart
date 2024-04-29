@@ -13,9 +13,9 @@ class BlockPipeSection<I, O> extends PipeSection<I, O> {
   Block<I, O> action;
 
   @override
-  Future<void> start(Stream<dynamic> srcIn, Stream<dynamic> srcErr
-      ) async {
-    final done = CompleterEx<void>();
+  Future<CompleterEx<void>> start(
+      Stream<dynamic> srcIn, Stream<dynamic> srcErr) async {
+    final done = CompleterEx<void>(debugName: 'BlockSection');
     // ignore: unawaited_futures
     action(srcIn.cast<I>(), srcErr.cast<I>(), _outController.sink,
             _errController.sink)
@@ -25,7 +25,7 @@ class BlockPipeSection<I, O> extends PipeSection<I, O> {
       await _outController.close();
     });
 
-    return done.future;
+    return done;
   }
 
   late final _errController = StreamController<O>();
