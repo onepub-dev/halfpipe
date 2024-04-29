@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:completer_ex/completer_ex.dart';
 
 import '../run_process.dart';
+import '../util/stream_controller_ex.dart';
 import 'pipe_section.dart';
 
 class CommandPipeSection extends PipeSection<List<int>, List<int>> {
@@ -58,7 +59,10 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>> {
     final _stdoutFlushed = CompleterEx<bool>();
 
     /// Feed data from our running process to the next [PipeSection].
-    runProcess.stdout.listen(outController.add).onDone(() async {
+    runProcess.stdout.listen((data) {
+      print('process: sending data: ${data.length}');
+      outController.add(data);
+    }).onDone(() async {
       _stdoutFlushed.complete(true);
       await outController.close();
     });
@@ -85,10 +89,10 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>> {
   }
 
   @override
-  StreamController<List<int>> get errController =>
-      StreamController<List<int>>();
+  StreamControllerEx<List<int>> get errController =>
+      StreamControllerEx<List<int>>(debugName: 'command: err');
 
   @override
-  StreamController<List<int>> get outController =>
-      StreamController<List<int>>();
+  StreamControllerEx<List<int>> get outController =>
+      StreamControllerEx<List<int>>(debugName: 'command: out');
 }

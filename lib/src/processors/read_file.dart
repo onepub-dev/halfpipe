@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import '../util/stream_controller_ex.dart';
 import 'processor.dart';
 
 class ReadFile extends Processor<List<int>, List<int>> {
@@ -8,8 +9,10 @@ class ReadFile extends Processor<List<int>, List<int>> {
   String pathToFile;
 
   @override
-  Future<void> start(Stream<List<int>> srcIn, Stream<List<int>> srcErr,
-      ) async {
+  Future<void> start(
+    Stream<List<int>> srcIn,
+    Stream<List<int>> srcErr,
+  ) async {
     // Read the file as a list of strings
     final ras = File(pathToFile).open();
 
@@ -22,8 +25,10 @@ class ReadFile extends Processor<List<int>, List<int>> {
   }
 
   @override
-  StreamController<List<int>> get errController => StreamController<List<int>>();
+  StreamControllerEx<List<int>> get errController =>
+      StreamControllerEx<List<int>>(debugName: 'readfile: err');
 
   @override
-  StreamController<List<int>> get outController => StreamController<List<int>>();
+  StreamControllerEx<List<int>> get outController =>
+      StreamControllerEx<List<int>>(debugName: 'readfile: out');
 }

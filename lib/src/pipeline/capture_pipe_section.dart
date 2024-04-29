@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:io';
 
 import '../half_pipe.dart';
+import '../util/stream_controller_ex.dart';
 import 'pipe_section.dart';
 
 /// The same as a BlockPipeSection however all output
@@ -31,8 +32,10 @@ class CapturePipeSection<I, O> extends PipeSection<I, O> {
   }
 
   @override
-  StreamController<O> get errController => StreamController<O>();
+  StreamControllerEx<O> get errController =>
+      StreamControllerEx<O>(debugName: 'capture: err');
 
   @override
-  StreamController<O> get outController => StreamController<O>();
+  StreamControllerEx<O> get outController =>
+      StreamControllerEx<O>(debugName: 'capture; out');
 }

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import '../pipeline/pipe_phase.dart';
+import '../util/stream_controller_ex.dart';
 import 'pass_through.dart';
 import 'processor.dart';
 
@@ -28,8 +29,10 @@ class Tee<T> extends Processor<T, T> {
   }
 
   @override
-  StreamController<T> get errController => StreamController<T>();
+  StreamControllerEx<T> get errController =>
+      StreamControllerEx<T>(debugName: 'test: err');
 
   @override
-  StreamController<T> get outController => StreamController<T>();
+  StreamControllerEx<T> get outController =>
+      StreamControllerEx<T>(debugName: 'test: out');
 }

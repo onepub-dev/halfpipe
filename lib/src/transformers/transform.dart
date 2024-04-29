@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import '../util/stream_controller_ex.dart';
 import 'transformer.dart';
 import 'utf8_line_splitter.dart';
 
@@ -19,10 +20,12 @@ class Transform<I, O> extends Transformer<I, O> {
   }
 
   @override
-  StreamController<O> get errController => StreamController<O>();
+  StreamControllerEx<O> get errController =>
+      StreamControllerEx<O>(debugName: 'tranform: err');
 
   @override
-  StreamController<O> get outController => StreamController<O>();
+  StreamControllerEx<O> get outController =>
+      StreamControllerEx<O>(debugName: 'transform: out');
 
   static Utf8LineSplitter get line => Utf8LineSplitter();
 }

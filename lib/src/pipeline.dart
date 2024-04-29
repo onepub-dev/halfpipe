@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:dcli/dcli.dart';
+
+import 'util/stream_controller_ex.dart';
 /*
 
 
@@ -71,10 +73,10 @@ class Pipeline {
     stderr = stderrController.sink;
   }
 
-  late final stdoutController = StreamController<List<int>>();
+  late final stdoutController = StreamControllerEx<List<int>>(debugName: 'stdout');
   late final StreamSink<List<int>> stdout;
 
-  late final stderrController = StreamController<List<int>>();
+  late final stderrController = StreamControllerEx<List<int>>(debugName: 'stderr');
   late final StreamSink<List<int>> stderr;
 
   Future<void> close() async {
