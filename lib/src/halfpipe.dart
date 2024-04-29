@@ -115,21 +115,3 @@
 //   Future<int> exitCode() {
 //     throw UnimplementedError();
 //   }
-
-  
-//   void wireStreams(Process process) {
-//     /// handle stdout stream
-//     process.stdout
-//         .transform(utf8.decoder)
-//         .transform(const LineSplitter())
-//         .listen(progress.printStdOut)
-//         .onDone(_stdoutFlushed.complete);
-
-//     // handle stderr stream
-//     process.stderr
-//         .transform(utf8.decoder)
-//         .transform(const LineSplitter())
-//         .listen(progress.printStdErr)
-//         .onDone(_stderrFlushed.complete);
-//   }
-// }
