@@ -13,12 +13,14 @@ abstract class PipeSection<I, O> with PipeSectionMixin<O> {
   /// and passing data out to the next [PipeSection].
   /// [srcIn] is a stream from the prior [PipeSection] equivalent stdout.
   /// [srcErr] is a stream from the prior [PipeSection] equivalent to stderr.
-  /// [outController] is where this [PipeSection] writes it's 'good' data.
-  /// [errController] is where this [PipeSection] writes its 'bad'data.
-  /// A Future is returned that completes when this [PipeSection] has completed
+  /// A [CompleterEx] is returned that completes when this [PipeSection]
+  /// has completed
   /// generating/processing the [srcIn] and [srcErr] streams.
-  Future<CompleterEx<void>> start(
-      StreamControllerEx<I> srcIn, StreamControllerEx<I> srcErr);
+  void start(StreamControllerEx<I> srcIn, StreamControllerEx<I> srcErr);
+
+  /// The [done] completer 'completes' when this section has finished
+  /// processing data from its input streams;
+  CompleterEx<void> get done;
 
   /// Called when the pipeline is shutting down to give each
   /// section a chance to free any resources.

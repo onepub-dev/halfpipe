@@ -18,7 +18,10 @@ class Tee<T> extends Processor<T, T> {
   PassThrough<T, T> injector = PassThrough();
   PipePhase<T> other;
   @override
-  Future<CompleterEx<void>> start(
+  final done = CompleterEx<void>(debugName: 'Tee');
+
+  @override
+  Future<void> start(
       StreamControllerEx<T> srcIn, StreamControllerEx<T> srcErr) async {
     final inCompleter = CompleterEx<void>(debugName: 'Tee:Stdout');
     srcIn.stream.listen((line) {
@@ -37,12 +40,8 @@ class Tee<T> extends Processor<T, T> {
       ..onDone(errCompleter.complete)
       ..onError(errCompleter.completeError);
 
-    final done = CompleterEx<void>(debugName: 'Tee');
-
     unawaited(Future.wait([inCompleter.future, errCompleter.future])
         .then((_) => done.complete()));
-
-    return done;
   }
 
   @override

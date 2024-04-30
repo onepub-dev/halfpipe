@@ -11,8 +11,8 @@ mixin PipeSectionMixin<O> {
   StreamControllerEx<O> get outController => _outController;
 
   Future<void> close() async {
-    await _errController.close();
     await _outController.close();
+    await _errController.close();
   }
 
   String get debugName;

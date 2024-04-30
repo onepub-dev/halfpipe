@@ -13,45 +13,54 @@ class TransformerPipeSection<I, O> extends PipeSection<I, O> {
 
   Converter<I, O> transformer;
 
+  Sink<I>? inputConversionSinkForOut;
+  Sink<I>? inputConversionSinkForErr;
+  // If we wait now then we stop the next stage in the pipeline
+  // from running.
+  // exitCode = await runProcess.exitCode;
   @override
-  Future<CompleterEx<void>> start(
-    StreamControllerEx<dynamic> srcIn,
-    StreamControllerEx<dynamic> srcErr,
+  final done = CompleterEx<void>(debugName: 'TransformerSection: done');
+
+  @override
+  Future<void> start(
+    StreamControllerEx<I> srcIn,
+    StreamControllerEx<I> srcErr,
   ) async {
     final outCompleter = CompleterEx<bool>(debugName: 'TransformerPipe: out');
     final errCompleter = CompleterEx<bool>(debugName: 'TransformerPipe: err');
 
-    final inputConversionSinkForOut =
+    inputConversionSinkForOut =
         transformer.startChunkedConversion(outController.sink);
-    final inputConversionSinkForErr =
+    inputConversionSinkForErr =
         transformer.startChunkedConversion(errController.sink);
+
+        
     srcIn.stream.listen((data) {
-      print('Transformer: addIn');
-      inputConversionSinkForOut.add(data as I);
+      print('Transformer: got data $data');
+      inputConversionSinkForOut!.add(data);
     }, onDone: () {
-      inputConversionSinkForOut.close();
-      // outController.sink.close();
+      print('Transfomer: done - out');
       outCompleter.complete(true);
     }, onError: outCompleter.completeError);
     srcErr.stream.listen((data) {
       print('Transformer: addErr');
-      inputConversionSinkForErr.add(data as I);
+      inputConversionSinkForErr!.add(data);
     }, onDone: () {
-      inputConversionSinkForErr.close();
-      errController.sink.close();
       errCompleter.complete(true);
     }, onError: errCompleter.completeError);
 
-    // If we wait now then we stop the next stage in the pipeline
-    // from running.
-    // exitCode = await runProcess.exitCode;
-    final done = CompleterEx<void>(debugName: 'TransformerSection: done');
     unawaited(Future.wait<bool>([outCompleter.future, errCompleter.future])
         // ignore: prefer_expression_function_bodies
         .then((_) {
       done.complete();
     }));
-    return done;
+  }
+
+  @override
+  Future<void> close() async {
+    inputConversionSinkForOut?.close();
+    inputConversionSinkForErr?.close();
+    await super.close();
   }
 
   @override

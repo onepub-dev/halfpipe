@@ -14,7 +14,10 @@ class ProcessorPipeSection<I, O> extends PipeSection<I, O> {
   Processor<I, O> transformer;
 
   @override
-  Future<CompleterEx<void>> start(
+  CompleterEx<void> get done => transformer.done;
+
+  @override
+  Future<void> start(
           StreamControllerEx<I> srcIn, StreamControllerEx<I> srcErr) async =>
       transformer.start(srcIn, srcErr);
 

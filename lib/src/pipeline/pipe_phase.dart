@@ -6,7 +6,6 @@ import 'dart:core';
 import 'dart:io';
 
 import 'package:async/async.dart';
-import 'package:completer_ex/completer_ex.dart';
 
 import '../half_pipe.dart';
 import '../processors/processor.dart';
@@ -180,20 +179,14 @@ class PipePhase<T> {
     /// an empty stream.
     var priorErrController =
         StreamControllerEx<dynamic>(debugName: 'dummy stdin - error channel');
-    // await priorErrController.sink.close();
-    // final controllersToClose = <StreamControllerEx<dynamic>>[];
 
-    // late StreamControllerEx<dynamic> nextOutController;
-    // late StreamControllerEx<dynamic> nextErrController;
-
-    final sectionCompleters = <CompleterEx<void>>[];
+    // final sectionCompleters = <CompleterEx<void>>[];
 
     for (final section in sections) {
-      final sectionCompleter = await section.start(
+      section.start(
         priorOutController,
         priorErrController,
       );
-      sectionCompleters.add(sectionCompleter);
 
       priorOutController = section.outController;
       priorErrController = section.errController;
@@ -220,19 +213,19 @@ class PipePhase<T> {
     // await sinkErrController.addStream(priorErrController.stream.cast<T>());
 
     /// Wait for all sections to process the data through.
-    await Future.wait<void>(
-        sectionCompleters.map<Future>((e) => e.future).toList());
+    // await Future.wait<void>(
+    //     sectionCompleters.map<Future>((e) => e.future).toList());
 
-    /// TODO: work out when to close these. We can't do it until all the data
-    /// has been processed.
-    // for (final controller in controllersToClose) {
-    //   await controller.close();
-    // }
-    await stdinController.close();
-
-    for (final section in sections) {
+    for (var i = 0; i < sections.length; i++) {
+      final section = sections[i];
+      await section.done.future;
       await section.close();
+      // final nextSection = sections[i + 1];
+
+      /// TODO: we never close the first section?
+      // await nextSection.close();
     }
+    await stdinController.close();
   }
 
   PipePhase<O> _changeType<I, O>(PipePhase<I> src) {
@@ -253,7 +246,7 @@ class PipePhase<T> {
     await group.add(stream1);
     await group.add(stream2);
 
-    // TODO: not certin if this is correct.
+    // TODO: not certian if this is correct.
     await group.close();
 
     // Return the combined stream from the StreamGroup

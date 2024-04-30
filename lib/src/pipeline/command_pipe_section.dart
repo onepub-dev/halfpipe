@@ -45,8 +45,14 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>> {
 
   int? exitCode;
 
+  // If we wait now then we stop the next stage in the pipeline
+  // from running.
+  // exitCode = await runProcess.exitCode;
   @override
-  Future<CompleterEx<void>> start(
+  final done = CompleterEx<void>(debugName: 'CommandPipe: done');
+
+  @override
+  Future<void> start(
     StreamControllerEx<dynamic> srcIn,
     StreamControllerEx<dynamic> srcErr,
   ) async {
@@ -64,30 +70,21 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>> {
       print('process: sending data: ${data.length}');
       outController.sink.add(data);
     }).onDone(() async {
+      print('Command: done - out');
       _stdoutFlushed.complete();
-      // await outController.close();
     });
 
     final _stderrFlushed =
         CompleterEx<void>(debugName: 'CommandSection - stderr');
     runProcess.stderr.listen(errController.add).onDone(() async {
       _stderrFlushed.complete();
-      // await errController.close();
     });
-
-    // If we wait now then we stop the next stage in the pipeline
-    // from running.
-    // exitCode = await runProcess.exitCode;
-    final done = CompleterEx<void>(debugName: 'CommandPipe: done');
 
     unawaited(Future.wait<void>(
             [_stdoutFlushed.future, _stderrFlushed.future, runProcess.exitCode])
         .then((value) {
       done.complete();
     }));
-
-    /// when all the streams are flushed and the process has exited.
-    return done;
   }
 
   @override

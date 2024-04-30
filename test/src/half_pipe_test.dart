@@ -25,6 +25,7 @@ void main() {
         expect(list.length, equals(2));
         expect(list.first, equals('one.txt'));
         expect(list.last, equals('two.txt'));
+        
       });
     });
     test('block', () async {

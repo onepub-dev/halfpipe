@@ -9,13 +9,14 @@ class Skip extends Processor<String, String> {
   Skip(this.linesToSkip);
   int linesToSkip;
   @override
-  Future<CompleterEx<void>> start(
+  final done = CompleterEx<void>(debugName: 'SkipSection');
+  @override
+  Future<void> start(
     StreamControllerEx<String> srcIn,
     StreamControllerEx<String> srcErr,
   ) async {
     var count = linesToSkip;
 
-    final done = CompleterEx<void>(debugName: 'SkipSection');
     // do not pass the first [lineToSkip]
     srcIn.stream.listen((line) {
       if (count > 0) {
@@ -29,8 +30,6 @@ class Skip extends Processor<String, String> {
 
     // write [srcErr] directly to [sinkErr]
     await errController.sink.addStream(srcErr.stream);
-
-    return done;
   }
 
   @override

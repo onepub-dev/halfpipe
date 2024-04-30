@@ -11,14 +11,15 @@ class ReadFile extends Processor<List<int>, List<int>> {
   String pathToFile;
 
   @override
-  Future<CompleterEx<void>> start(
+  final done = CompleterEx<void>(debugName: 'ReadFile');
+
+  @override
+  Future<void> start(
     StreamControllerEx<List<int>> srcIn,
     StreamControllerEx<List<int>> srcErr,
   ) async {
     // Read the file as a list of strings
     final ras = File(pathToFile).open();
-
-    final done = CompleterEx<void>(debugName: 'ReadFile');
 
     /// write the contents of the file into the stream.
     ras.asStream().listen((event) {
@@ -28,8 +29,6 @@ class ReadFile extends Processor<List<int>, List<int>> {
       ..onError(done.completeError);
 
     await errController.sink.addStream(srcErr.stream);
-
-    return done;
   }
 
   @override
