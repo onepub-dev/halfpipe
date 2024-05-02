@@ -46,6 +46,7 @@ class TransformerPipeSection<I, O> extends PipeSection<I, O> {
       print('Transformer: addErr');
       inputConversionSinkForErr!.add(data);
     }, onDone: () {
+      print('Transfomer: done - err');
       errCompleter.complete(true);
     }, onError: errCompleter.completeError);
 
@@ -58,6 +59,7 @@ class TransformerPipeSection<I, O> extends PipeSection<I, O> {
 
   @override
   Future<void> close() async {
+    
     inputConversionSinkForOut?.close();
     inputConversionSinkForErr?.close();
     await super.close();

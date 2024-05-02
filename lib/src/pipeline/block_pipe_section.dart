@@ -23,6 +23,7 @@ class BlockPipeSection<I, O> extends PipeSection<I, O> {
     action(srcIn.stream.cast<I>(), srcErr.stream.cast<I>(), outController.sink,
             errController.sink)
         .then((_) async {
+      print('block is done');
       done.complete();
     });
   }

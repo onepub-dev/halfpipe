@@ -218,7 +218,9 @@ class PipePhase<T> {
 
     for (var i = 0; i < sections.length; i++) {
       final section = sections[i];
+      core.print('waiting for section: ${section.debugName} to complete');
       await section.done.future;
+      core.print('closing section ${section.debugName}');
       await section.close();
       // final nextSection = sections[i + 1];
 

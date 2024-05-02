@@ -11,8 +11,11 @@ mixin PipeSectionMixin<O> {
   StreamControllerEx<O> get outController => _outController;
 
   Future<void> close() async {
+    print('starting close of $debugName for ${_errController.debugName}');
     await _outController.close();
+    print('closed out of $debugName');
     await _errController.close();
+    print('closed err of $debugName');
   }
 
   String get debugName;
