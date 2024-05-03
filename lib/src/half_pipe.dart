@@ -2,21 +2,17 @@
 
 import 'dart:async';
 
-import 'pipeline.dart';
 import 'pipeline/pipe_phase.dart';
 import 'processors/processor.dart';
 
-/// Out [Pipeline] allows us to pass through stdout and
+/// [HalfPipe] allows us to pass through stdout and
 /// stderr unlike a bash pipeline that only has one input
 /// channel.
 /// If a external command is added to the pipeline then
 /// only sinkOut and sinkErr will be combined and written
 /// to the external commands stdin.
-typedef Block<I, O> = Future<void> Function(
-    Stream<I> srcIn,
-    Stream<I> srcErr,
-    StreamSink<O> sinkOut,
-    StreamSink<O> sinkErr);
+typedef Block<I, O> = Future<void> Function(Stream<I> srcIn, Stream<I> srcErr,
+    StreamSink<O> sinkOut, StreamSink<O> sinkErr);
 
 class HalfPipe {
   HalfPipe() {
