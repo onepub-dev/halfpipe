@@ -18,17 +18,23 @@ class ReadFile extends Processor<List<int>, List<int>> {
     StreamControllerEx<List<int>> srcIn,
     StreamControllerEx<List<int>> srcErr,
   ) async {
-    // Read the file as a list of strings
-    final ras = File(pathToFile).open();
+    try {
+      // Read the file as a list of strings
+      final fileStream = File(pathToFile).openRead();
 
-    /// write the contents of the file into the stream.
-    ras.asStream().listen((event) {
-      stdout.write(event);
-    })
-      ..onDone(done.complete)
-      ..onError(done.completeError);
+      /// write the contents of the file into the stream.
+      fileStream.listen((event) {
+        stdout.write(event);
+      })
+        ..onDone(done.complete)
+        ..onError(done.completeError);
 
-    await errController.sink.addStream(srcErr.stream);
+      await errController.sink.addStream(srcErr.stream);
+    }
+    // ignore: avoid_catches_without_on_clauses
+    catch (e) {
+      done.completeError(e);
+    }
   }
 
   @override
