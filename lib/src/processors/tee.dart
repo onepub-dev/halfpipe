@@ -24,13 +24,12 @@ class Tee<T> extends Processor<T, T> {
   Future<void> start(
       StreamControllerEx<T> srcIn, StreamControllerEx<T> srcErr) async {
     final inCompleter = CompleterEx<void>(debugName: 'Tee:Stdout');
-    srcIn.stream.listen((line) {
-      stdout.writeln(line);
+    srcIn.stream.listen((data) {
+      stdout.write(data);
+      injector.outController.add(data);
     })
       ..onDone(inCompleter.complete)
       ..onError(inCompleter.completeError);
-
-    await injector.outController.addStream(srcIn.stream);
 
     final errCompleter = CompleterEx<void>(debugName: 'Tee:Stdout');
     srcErr.stream.listen((line) {
