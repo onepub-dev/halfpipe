@@ -148,4 +148,28 @@ some text
           .print();
     });
   });
+
+  test('pipeline ...', () async {
+    print('start');
+    await HalfPipe()
+        .command('ls')
+        // process the output from ls printing 'file: xxx' for each line
+        .block((srcIn, srcErr, sinkOut, sinkErr) async {
+          await for (final line in srcIn) {
+            print('file: $line');
+          }
+          print('hi');
+          printerr('ho');
+        })
+        // any data written to stderr is redirected to stdout.
+        .redirectStdout(Redirect.toStdout)
+        // second processor
+        .block((srcIn, _, __, ___) async {
+          await for (final line in srcIn) {
+            print('2nd: $line');
+          }
+        })
+        .print();
+    print('end');
+  });
 }
