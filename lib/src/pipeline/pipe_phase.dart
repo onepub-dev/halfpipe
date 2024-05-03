@@ -9,11 +9,13 @@ import 'package:async/async.dart';
 
 import '../half_pipe.dart';
 import '../processors/processor.dart';
+import '../transformers/transform.dart';
 import '../util/stream_controller_ex.dart';
 import 'block_pipe_section.dart';
 import 'command_pipe_section.dart';
 import 'pipe_section.dart';
 import 'processor_pipe_section.dart';
+import 'stdin_wrapper.dart';
 import 'transformer_pipe_section.dart';
 
 /// Describes the type of data <T> that the pipeline
@@ -21,7 +23,7 @@ import 'transformer_pipe_section.dart';
 /// As data move through the pipeline it's type may
 /// be translated a number of times.
 /// All pipelines start with int data.
-class PipePhase<T> {
+class PipePhase<I> {
   PipePhase(this._halfPipe2);
 
   final HalfPipe _halfPipe2;
@@ -42,7 +44,7 @@ class PipePhase<T> {
         terminal: terminal,
         extensionSearch: extensionSearch,
         workingDirectory: workingDirectory));
-    return _changeType<T, List<int>>(this);
+    return _changeType<I, List<int>>(this);
   }
 
   PipePhase<int> commandAndArgs(String command,
@@ -61,32 +63,35 @@ class PipePhase<T> {
         nothrow: nothrow,
         extensionSearch: extensionSearch,
         workingDirectory: workingDirectory));
-    return _changeType<T, int>(this);
+    return _changeType<I, int>(this);
   }
 
   /// Defines a block of dart code that can is called as
   /// part of the pipeline.
-  PipePhase<O> block<O>(Block<T, O> callback) {
-    sections.add(BlockPipeSection<T, O>(callback));
+  PipePhase<O> block<O>(Block<I, O> callback) {
+    sections.add(BlockPipeSection<I, O>(callback));
 
-    return _changeType<T, O>(this);
+    return _changeType<I, O>(this);
   }
 
   ///
-  PipePhase<O> processor<O>(Processor<T, O> processor) {
-    sections.add(ProcessorPipeSection(processor));
-    return _changeType<T, O>(this);
+  PipePhase<O> processor<O>(Processor<I, O> processor) {
+    sections.add(ProcessorPipeSection<I, O>(processor));
+    return _changeType<I, O>(this);
   }
 
-  PipePhase<O> transform<O>(Converter<T, O> converter) {
-    sections.add(TransformerPipeSection<T, O>(converter));
+  PipePhase<O> transform<O>(Converter<I, O> converter) {
+    sections.add(TransformerPipeSection<I, O>(converter));
 
-    return _changeType<T, O>(this);
+    return _changeType<I, O>(this);
   }
 
-  PipePhase<T> write(String pathToFile) {
+  /// Writes the output stream to the file located at [pathToFile].
+  /// The error stream is passed through to the next phase but
+  /// not written to the file.
+  PipePhase<I> write(String pathToFile) {
     final fileSink = File(pathToFile).openWrite();
-    return block<T>((srcIn, srcErr, sinkOut, sinkErr) async {
+    return block<I>((srcIn, srcErr, sinkOut, sinkErr) async {
       srcIn.listen(fileSink.write, onDone: fileSink.close);
       await sinkErr.addStream(srcErr);
     });
@@ -96,19 +101,18 @@ class PipePhase<T> {
   // The following are terminal functions
   // After they are called no additional sections
   // can be added to the pipeline.
+  // A terminal function runs the pipeline.
   //////////////////////////////////////////////////////
 
   /// Runs the pipeline outputing the results to a list.
   /// If the list exceeds [maxBuffer] then any further
-  /// data will be dropped
-  /// TODO: support a mode where we keep the last [maxBuffer] lines
-  Future<List<T>> toList([int maxBuffer = 10000]) async {
-    final elements = <T>[];
+  /// data will be dropped.
+  /// Runs the pipeline outputting the results to a list.
+  Future<List<I>> toList([int maxBuffer = 10000]) async {
+    final elements = <I>[];
 
-    sinkOutController.stream.cast<T>().listen((data) {
-      core.print('toList add');
+    sinkOutController.stream.cast<I>().listen((data) {
       if (elements.length < maxBuffer) {
-        // Add the new data
         elements.add(data);
       }
     });
@@ -118,19 +122,45 @@ class PipePhase<T> {
     return elements;
   }
 
+  /// Runs the pipeline returning the last [n] lines of the output.
+  Future<List<I>> tail(int n) async {
+    final elements = <I>[];
+
+    sinkOutController.stream.cast<I>().listen((data) {
+      if (elements.length >= n) {
+        elements.removeAt(0); // Remove the oldest element
+      }
+      elements.add(data); // Add the new data
+    });
+
+    /// run the pipeline.
+    await run();
+    return elements;
+  }
+
+  /// Runs the pipeline outputing the results to a paragraph of
+  /// text containing newlines.
+  /// If the list exceeds [maxBuffer] then any further
+  /// data will be dropped
   Future<String> toParagraph([int maxBuffer = 10000]) async {
     final list = await toList(maxBuffer);
     return list.join('\n');
   }
 
   /// redirect the processors output
-  PipePhase<T> redirectStdout(Redirect redirect) => this;
-  PipePhase<T> redirectStderr(Redirect redirect) => this;
+  PipePhase<I> redirectStdout(Redirect redirect) => this;
+  PipePhase<I> redirectStderr(Redirect redirect) => this;
 
   /// Runs the pipeline printing stdout and stderr
   /// to the console.
+  /// If the streams are a List<int> we automatically
+  /// convert it to a List<String>
   Future<void> printmix(
       {bool showStdout = true, bool showStderr = true}) async {
+    if (I == List<int>) {
+      sections.add(TransformerPipeSection<List<int>, String>(Transform.line));
+    }
+
     sections.add(BlockPipeSection(
       (srcIn, srcErr, sinkOut, sinkErr) async {
         if (showStdout) {
@@ -145,10 +175,18 @@ class PipePhase<T> {
     await run();
   }
 
+  /// Runs the pipeline printing the output stream to stdout.
+  /// If the stream is a List<int> we automatically
+  /// convert it to a List<String>
+  /// The error stream is supressed.
   Future<void> print() async {
     await printmix(showStderr: false);
   }
 
+  /// Runs the pipeline printing the error stream to stdout.
+  /// If the stream is a List<int> we automatically
+  /// convert it to a List<String>
+  /// The output stream is supressed.
   Future<void> printerr() async {
     await printmix(showStdout: false);
   }
@@ -158,76 +196,56 @@ class PipePhase<T> {
 
   /// The output of the final phase is funnelled into
   /// these two controllers.
-  StreamControllerEx<T> sinkOutController =
-      StreamControllerEx<T>(debugName: 'final: out');
-  StreamControllerEx<T> sinkErrController =
-      StreamControllerEx<T>(debugName: 'final err');
+  StreamControllerEx<I> sinkOutController =
+      StreamControllerEx<I>(debugName: 'final: out');
+  StreamControllerEx<I> sinkErrController =
+      StreamControllerEx<I>(debugName: 'final err');
 
   // Wire up the [PipeSection]s by attaching their streams
   // and then run the pipeline.
   Future<void> run() async {
-    final stdinController =
-        StreamControllerEx<dynamic>(debugName: 'stdin of main process');
+    await withStdin(debugName: 'stdin of main process',
+        (stdinController) async {
+      // final sub = stdinController.stream
+      //     .listen((data) => stdinController.sink.add(data));
 
-    stdin.listen((data) => stdinController.sink.add(data));
+      /// Wire the process's stdin as the first
+      /// section's input
+      StreamControllerEx<dynamic> priorOutController = stdinController;
 
-    /// Wire the process's stdin as the first
-    /// section's input
-    var priorOutController = stdinController;
+      /// The first section has no error inputs so wire in
+      /// an empty stream.
+      StreamControllerEx<dynamic> priorErrController =
+          StreamControllerEx<List<int>>(
+              debugName: 'dummy stdin - error channel');
 
-    /// The first section has no error inputs so wire in
-    /// an empty stream.
-    var priorErrController =
-        StreamControllerEx<dynamic>(debugName: 'dummy stdin - error channel');
+      // final sectionCompleters = <CompleterEx<void>>[];
 
-    // final sectionCompleters = <CompleterEx<void>>[];
+      for (final section in sections) {
+        section.start(
+          priorOutController,
+          priorErrController,
+        );
 
-    for (final section in sections) {
-      section.start(
-        priorOutController,
-        priorErrController,
-      );
+        priorOutController = section.outController;
+        priorErrController = section.errController;
+      }
 
-      priorOutController = section.outController;
-      priorErrController = section.errController;
-      // ignore: close_sinks
-      // final nextIn = StreamControllerEx<dynamic>();
-      // ignore: close_sinks
-      // controllersToClose.addAll([nextOutController, nextErrController]);
-      // final nextErr = StreamControllerEx<dynamic>();
+      priorOutController.stream
+          .listen((data) => sinkOutController.add(data as I));
+      priorErrController.stream
+          .listen((data) => sinkErrController.add(data as I));
 
-      // priorSrcIn = nextIn.stream;
-      // priorSrcErr = nextErr.stream;
-    }
-
-    // Wire the last section to the final output controllers
-    // await sinkOutController.addStream(priorOutController.stream.cast<T>());
-    // await sinkErrController.addStream(priorErrController.stream.cast<T>());
-
-    priorOutController.stream
-        .listen((data) => sinkOutController.add(data as T));
-    priorErrController.stream
-        .listen((data) => sinkErrController.add(data as T));
-
-    // await sinkOutController.addStream(priorOutController.stream.cast<T>());
-    // await sinkErrController.addStream(priorErrController.stream.cast<T>());
-
-    /// Wait for all sections to process the data through.
-    // await Future.wait<void>(
-    //     sectionCompleters.map<Future>((e) => e.future).toList());
-
-    for (var i = 0; i < sections.length; i++) {
-      final section = sections[i];
-      core.print('waiting for section: ${section.debugName} to complete');
-      await section.done.future;
-      core.print('closing section ${section.debugName}');
-      await section.close();
-      // final nextSection = sections[i + 1];
-
-      /// TODO: we never close the first section?
-      // await nextSection.close();
-    }
-    await stdinController.close();
+      for (var i = 0; i < sections.length; i++) {
+        final section = sections[i];
+        core.print('waiting for section: ${section.debugName} to complete');
+        await section.done.future;
+        core.print('closing section ${section.debugName}');
+        await section.close();
+      }
+      // await sub.cancel();
+      await stdinController.close();
+    });
   }
 
   PipePhase<O> _changeType<I, O>(PipePhase<I> src) {
@@ -235,10 +253,10 @@ class PipePhase<T> {
     return out;
   }
 
-  Stream<List<T>> get stdout => sinkOutController.stream as Stream<List<T>>;
-  Stream<List<T>> get stderr => sinkErrController.stream as Stream<List<T>>;
+  Stream<List<I>> get stdout => sinkOutController.stream as Stream<List<I>>;
+  Stream<List<I>> get stderr => sinkErrController.stream as Stream<List<I>>;
 
-  Future<Stream<core.List<T>>> get stdmix async => mixStreams(stdout, stderr);
+  Future<Stream<core.List<I>>> get stdmix async => mixStreams(stdout, stderr);
 // Function to mix two streams
   Future<Stream<S>> mixStreams<S>(Stream<S> stream1, Stream<S> stream2) async {
     // Create a StreamGroup
