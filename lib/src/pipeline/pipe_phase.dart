@@ -6,6 +6,7 @@ import 'dart:core';
 import 'dart:io';
 
 import 'package:async/async.dart';
+import 'package:logging/logging.dart';
 
 import '../half_pipe.dart';
 import '../processors/processor.dart';
@@ -29,6 +30,8 @@ class PipePhase<I> {
   final HalfPipe _halfPipe2;
 
   List<PipeSection> sections = [];
+
+  final log = Logger((PipePhase).toString());
 
   PipePhase<List<int>> command(String commandLine,
       {bool runInShell = false,
@@ -236,9 +239,9 @@ class PipePhase<I> {
 
       for (var i = 0; i < sections.length; i++) {
         final section = sections[i];
-        core.print('waiting for section: ${section.debugName} to complete');
+        log.fine(() => 'waiting for section: ${section.debugName} to complete');
         await section.done.future;
-        core.print('closing section ${section.debugName}');
+        log.fine(() => 'closing section ${section.debugName}');
         await section.close();
       }
       // await sub.cancel();

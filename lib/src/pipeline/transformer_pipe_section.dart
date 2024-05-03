@@ -4,12 +4,15 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:completer_ex/completer_ex.dart';
+import 'package:logging/logging.dart';
 
 import '../util/stream_controller_ex.dart';
 import 'pipe_section.dart';
 
 class TransformerPipeSection<I, O> extends PipeSection<I, O> {
   TransformerPipeSection(this.transformer);
+
+  final _log = Logger((TransformerPipeSection).toString());
 
   Converter<I, O> transformer;
 
@@ -34,19 +37,18 @@ class TransformerPipeSection<I, O> extends PipeSection<I, O> {
     inputConversionSinkForErr =
         transformer.startChunkedConversion(errController.sink);
 
-        
     srcIn.stream.listen((data) {
-      print('Transformer: got data $data');
+      _log.fine(() => 'Transformer: got data $data');
       inputConversionSinkForOut!.add(data);
     }, onDone: () {
-      print('Transfomer: done - out');
+      _log.fine(() => 'Transfomer: done - out');
       outCompleter.complete(true);
     }, onError: outCompleter.completeError);
     srcErr.stream.listen((data) {
-      print('Transformer: addErr');
+      _log.fine(() => 'Transformer: addErr');
       inputConversionSinkForErr!.add(data);
     }, onDone: () {
-      print('Transfomer: done - err');
+      _log.fine(() => 'Transfomer: done - err');
       errCompleter.complete(true);
     }, onError: errCompleter.completeError);
 
@@ -59,7 +61,6 @@ class TransformerPipeSection<I, O> extends PipeSection<I, O> {
 
   @override
   Future<void> close() async {
-    
     inputConversionSinkForOut?.close();
     inputConversionSinkForErr?.close();
     await super.close();

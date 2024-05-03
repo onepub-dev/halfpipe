@@ -8,10 +8,16 @@ import 'package:halfpipe/src/processors/read_file.dart';
 import 'package:halfpipe/src/processors/skip.dart';
 import 'package:halfpipe/src/processors/tee.dart';
 import 'package:halfpipe/src/transformers/transform.dart';
+import 'package:logging/logging.dart';
 import 'package:path/path.dart' hide equals;
 import 'package:test/test.dart' hide Skip;
 
 void main() {
+  Logger.root.level = Level.ALL; // defaults to Level.INFO
+  Logger.root.onRecord.listen((record) {
+    print('${record.level.name}: ${record.time}: ${record.message}');
+  });
+
   group('half_pipe', () {
     test('command with line transform', () async {
       await withTempDirAsync((tempDir) async {
@@ -153,6 +159,7 @@ some text
     print('start');
     await HalfPipe()
         .command('ls')
+        .transform(Transform.line)
         // process the output from ls printing 'file: xxx' for each line
         .block((srcIn, srcErr, sinkOut, sinkErr) async {
           await for (final line in srcIn) {

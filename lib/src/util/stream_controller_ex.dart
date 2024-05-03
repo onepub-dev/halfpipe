@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:logging/logging.dart';
+
 ///
 /// Intended as a drop in replacement for [StreamControllerEx]
 /// but with some extra support for debugging your streams.
@@ -18,9 +20,11 @@ class StreamControllerEx<T> implements StreamController<T> {
         onCancel: onCancel,
         sync: sync);
     _controller.onListen = () {
-      print('Listener added to : $debugName');
+      log.fine(() => 'Listener added to : $debugName');
     };
   }
+
+  final log = Logger((StreamControllerEx).toString());
 
   late final StreamController<T> _controller;
 
@@ -54,7 +58,7 @@ class StreamControllerEx<T> implements StreamController<T> {
 
   @override
   Future<dynamic> close() {
-    print('closing $debugName');
+    log.fine(() => 'closing $debugName');
     return _controller.close();
   }
 

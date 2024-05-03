@@ -3,6 +3,7 @@
 import 'dart:async';
 
 import 'package:completer_ex/completer_ex.dart';
+import 'package:logging/logging.dart';
 
 import '../run_process.dart';
 import '../util/stream_controller_ex.dart';
@@ -41,6 +42,8 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>> {
             extensionSearch: extensionSearch,
             workingDirectory: workingDirectory);
 
+  final _log = Logger((CommandPipeSection).toString());
+
   RunProcess runProcess;
 
   int? exitCode;
@@ -68,10 +71,10 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>> {
 
       /// Feed data from our running process to the next [PipeSection].
       runProcess.stdout.listen((data) {
-        print('process: sending data: ${data.length}');
+        _log.fine(() => 'process: sending data: ${data.length}');
         outController.sink.add(data);
       }).onDone(() async {
-        print('Command: done - out');
+        _log.fine(() => 'Command: done - out');
         _stdoutFlushed.complete();
       });
 

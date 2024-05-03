@@ -3,6 +3,7 @@
 import 'dart:async';
 
 import 'package:completer_ex/completer_ex.dart';
+import 'package:logging/logging.dart';
 
 import '../half_pipe.dart';
 import '../util/stream_controller_ex.dart';
@@ -10,6 +11,8 @@ import 'pipe_section.dart';
 
 class BlockPipeSection<I, O> extends PipeSection<I, O> {
   BlockPipeSection(this.action);
+
+  final _log = Logger((BlockPipeSection).toString());
 
   Block<I, O> action;
 
@@ -23,7 +26,7 @@ class BlockPipeSection<I, O> extends PipeSection<I, O> {
     action(srcIn.stream.cast<I>(), srcErr.stream.cast<I>(), outController.sink,
             errController.sink)
         .then((_) async {
-      print('block is done');
+      _log.fine(() => 'block is done');
       done.complete();
     });
   }
