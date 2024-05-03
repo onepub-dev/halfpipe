@@ -25,7 +25,6 @@ void main() {
         expect(list.length, equals(2));
         expect(list.first, equals('one.txt'));
         expect(list.last, equals('two.txt'));
-        
       });
     });
     test('block', () async {
@@ -87,8 +86,12 @@ void main() {
         //     .orExpect(2)
         //     .onError(exitCode, error);
 
+        final pathToLineFile = join(tempDir, 'touch.txt');
+        await File(pathToLineFile).writeAsString('''
+some text
+          and a second line''');
         await HalfPipe()
-            .processor(ReadFile('path/to/file'))
+            .processor(ReadFile(pathToLineFile))
             .command('runme')
             .processor(Tee(pipe))
             .transform<String>(Transform.line)
@@ -98,7 +101,7 @@ void main() {
 
         await HalfPipe()
             .processor(ReadFile(
-                'path/to/file')) // read as binary file then use Transform.line
+                pathToLineFile)) // read as binary file then use Transform.line
             .transform(Transform.line)
             .toList();
 
