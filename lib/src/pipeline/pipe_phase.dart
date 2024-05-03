@@ -28,8 +28,6 @@ class PipePhase<I> {
 
   final HalfPipe _halfPipe2;
 
-  /// TODO: how do I handle the types as each [PipeSection] could
-  /// be a different type.
   List<PipeSection> sections = [];
 
   PipePhase<List<int>> command(String commandLine,
@@ -44,7 +42,7 @@ class PipePhase<I> {
         terminal: terminal,
         extensionSearch: extensionSearch,
         workingDirectory: workingDirectory));
-    return _changeType<I, List<int>>(this);
+    return _changeType<List<int>>(this);
   }
 
   PipePhase<int> commandAndArgs(String command,
@@ -63,7 +61,7 @@ class PipePhase<I> {
         nothrow: nothrow,
         extensionSearch: extensionSearch,
         workingDirectory: workingDirectory));
-    return _changeType<I, int>(this);
+    return _changeType<int>(this);
   }
 
   /// Defines a block of dart code that can is called as
@@ -71,19 +69,19 @@ class PipePhase<I> {
   PipePhase<O> block<O>(Block<I, O> callback) {
     sections.add(BlockPipeSection<I, O>(callback));
 
-    return _changeType<I, O>(this);
+    return _changeType<O>(this);
   }
 
   ///
   PipePhase<O> processor<O>(Processor<I, O> processor) {
     sections.add(ProcessorPipeSection<I, O>(processor));
-    return _changeType<I, O>(this);
+    return _changeType<O>(this);
   }
 
   PipePhase<O> transform<O>(Converter<I, O> converter) {
     sections.add(TransformerPipeSection<I, O>(converter));
 
-    return _changeType<I, O>(this);
+    return _changeType<O>(this);
   }
 
   /// Writes the output stream to the file located at [pathToFile].
@@ -96,6 +94,10 @@ class PipePhase<I> {
       await sinkErr.addStream(srcErr);
     });
   }
+
+  /// redirect the processors output
+  PipePhase<I> redirectStdout(Redirect redirect) => this;
+  PipePhase<I> redirectStderr(Redirect redirect) => this;
 
   //////////////////////////////////////////////////////
   // The following are terminal functions
@@ -146,10 +148,6 @@ class PipePhase<I> {
     final list = await toList(maxBuffer);
     return list.join('\n');
   }
-
-  /// redirect the processors output
-  PipePhase<I> redirectStdout(Redirect redirect) => this;
-  PipePhase<I> redirectStderr(Redirect redirect) => this;
 
   /// Runs the pipeline printing stdout and stderr
   /// to the console.
@@ -248,7 +246,7 @@ class PipePhase<I> {
     });
   }
 
-  PipePhase<O> _changeType<I, O>(PipePhase<I> src) {
+  PipePhase<O> _changeType<O>(PipePhase<I> src) {
     final out = PipePhase<O>(src._halfPipe2)..sections = src.sections;
     return out;
   }
@@ -266,7 +264,7 @@ class PipePhase<I> {
     await group.add(stream1);
     await group.add(stream2);
 
-    // TODO: not certian if this is correct.
+    // TODO(bsutton): not certian if this is correct.
     await group.close();
 
     // Return the combined stream from the StreamGroup
