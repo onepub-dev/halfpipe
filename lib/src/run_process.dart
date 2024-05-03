@@ -48,6 +48,11 @@ class RunProcess {
     if (process == null) {
       throw StateError('You must first call [RunProcess.start]');
     }
+
+    if (terminal == true) {
+      throw StateError(
+          '''When `terminal` is true ther process does not have its own stdout but is directly attached to the terminals stdout''');
+    }
     return process!.stdout;
   }
 
@@ -62,12 +67,18 @@ class RunProcess {
     if (process == null) {
       throw StateError('You must first call [RunProcess.start]');
     }
+
+    if (terminal == true) {
+      throw StateError(
+          '''When `terminal` is true, the process does not have its own stdin but is directly attached to the terminals stdin''');
+    }
+
     return process!.stdin;
   }
 
   Process? process;
 
-  Future<int>get exitCode {
+  Future<int> get exitCode {
     if (process == null) {
       throw StateError('You must first call [RunProcess.start]');
     }
