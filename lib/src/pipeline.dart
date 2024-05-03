@@ -64,8 +64,11 @@ pipeline((stdin)
 // Future<void> Function(Stream<int>, Stream<int>?, Stream<int>?)
 // Future<void> Function(Stream<int>, [Stream<int>?, Stream<int>?])
 
-typedef BlockCallback = Future<void> Function(Stream<List<int>> stdin,
-    StreamSink<List<int>>? stdout, StreamSink<List<int>>? stderr);
+typedef BlockCallback = Future<void> Function(
+    Stream<List<int>> srcIn,
+    Stream<List<int>> srcErr,
+    StreamSink<List<int>>? sinkOut,
+    StreamSink<List<int>>? sinkErr);
 
 class Pipeline {
   Pipeline() {

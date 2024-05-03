@@ -8,8 +8,8 @@ void main() {
     final pipe = Pipeline();
     await pipe.run('ls');
     // process the output from ls printing 'file: xxx' for each line
-    await pipe.process((stdin, stdout, stderr) async {
-      await for (final line in stdin) {
+    await pipe.process((srcIn, srcErr, sinkOut, sinkErr) async {
+      await for (final line in srcIn) {
         print('file: $line');
       }
       print('hi');
@@ -18,8 +18,8 @@ void main() {
     // any data written to stderr is redirected to stdout.
     pipe.redirect(Pipeline.errToOut);
     // second processor
-    await pipe.process((stdin, _, __) async {
-      await for (final line in stdin) {
+    await pipe.process((srcIn,_, __, ___) async {
+      await for (final line in srcIn) {
         print('2nd: $line');
       }
     });
