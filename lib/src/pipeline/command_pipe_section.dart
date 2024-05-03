@@ -60,31 +60,38 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>> {
     /// our running process.
     srcIn.stream.listen((line) => runProcess.stdin.write(line));
     srcErr.stream.listen((line) => runProcess.stdin.write(line));
-    await runProcess.start();
+    try {
+      await runProcess.start();
 
-    final _stdoutFlushed =
-        CompleterEx<void>(debugName: 'CommandSection - stdout');
+      final _stdoutFlushed =
+          CompleterEx<void>(debugName: 'CommandSection - stdout');
 
-    /// Feed data from our running process to the next [PipeSection].
-    runProcess.stdout.listen((data) {
-      print('process: sending data: ${data.length}');
-      outController.sink.add(data);
-    }).onDone(() async {
-      print('Command: done - out');
-      _stdoutFlushed.complete();
-    });
+      /// Feed data from our running process to the next [PipeSection].
+      runProcess.stdout.listen((data) {
+        print('process: sending data: ${data.length}');
+        outController.sink.add(data);
+      }).onDone(() async {
+        print('Command: done - out');
+        _stdoutFlushed.complete();
+      });
 
-    final _stderrFlushed =
-        CompleterEx<void>(debugName: 'CommandSection - stderr');
-    runProcess.stderr.listen(errController.add).onDone(() async {
-      _stderrFlushed.complete();
-    });
+      final _stderrFlushed =
+          CompleterEx<void>(debugName: 'CommandSection - stderr');
+      runProcess.stderr.listen(errController.add).onDone(() async {
+        _stderrFlushed.complete();
+      });
 
-    unawaited(Future.wait<void>(
-            [_stdoutFlushed.future, _stderrFlushed.future, runProcess.exitCode])
-        .then((value) {
-      done.complete();
-    }));
+      unawaited(Future.wait<void>([
+        _stdoutFlushed.future,
+        _stderrFlushed.future,
+        runProcess.exitCode
+      ]).then((value) {
+        done.complete();
+      }));
+      // ignore: avoid_catches_without_on_clauses
+    } catch (e) {
+      done.completeError(e);
+    }
   }
 
   @override
