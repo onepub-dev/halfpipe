@@ -226,9 +226,13 @@ class PipePhase<T> {
   /// Runs the pipeline outputing the results to a paragraph of
   /// text containing newlines.
   /// If the list exceeds [maxBuffer] then any further
-  /// data will be dropped
-  Future<String> toParagraph([int maxBuffer = 10000]) async {
-    final list = await toList(maxBuffer: maxBuffer);
+  /// data will be dropped.
+  /// The [captureMode] controls whether we return the first [maxBuffer]
+  /// lines (head) or the last [maxBuffer] lines (tail).
+  Future<String> toParagraph(
+      {int maxBuffer = 10000,
+      CaptureMode captureMode = CaptureMode.head}) async {
+    final list = await toList(maxBuffer: maxBuffer, captureMode: captureMode);
     return list.join('\n');
   }
 
