@@ -63,7 +63,7 @@ extension StringAsProcess on String {
     pipe.stdout.listen(print);
     pipe.stderr.listen(printerr);
 
-    await pipe.run();
+    await pipe.print();
   }
 
   Future<List<String>> toList(

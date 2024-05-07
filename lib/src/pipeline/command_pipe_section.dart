@@ -9,7 +9,12 @@ import '../run_process.dart';
 import '../util/stream_controller_ex.dart';
 import 'pipe_section.dart';
 
-class CommandPipeSection extends PipeSection<List<int>, List<int>> {
+abstract class HasExitCode {
+  int get exitCode;
+}
+
+class CommandPipeSection extends PipeSection<List<int>, List<int>>
+    implements HasExitCode {
   CommandPipeSection.commandLine(String commandLine,
       {bool runInShell = false,
       bool detached = false,
@@ -46,7 +51,8 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>> {
 
   RunProcess runProcess;
 
-  int? exitCode;
+  @override
+  late final int exitCode;
 
   // If we wait now then we stop the next stage in the pipeline
   // from running.
@@ -88,7 +94,8 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>> {
         _stdoutFlushed.future,
         _stderrFlushed.future,
         runProcess.exitCode
-      ]).then((value) {
+      ]).then((value) async {
+        exitCode = await runProcess.exitCode;
         done.complete();
       }));
       // ignore: avoid_catches_without_on_clauses
