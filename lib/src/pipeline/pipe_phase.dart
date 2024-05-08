@@ -148,11 +148,19 @@ class PipePhase<T> {
     return CaptureNone<T>(exitCode);
   }
 
+  /// Runs the pipeline. Any output written to stdout or
+  /// stderr will be let through to the terminal.
+  /// If one or more of the [PipeSection] implements [HasExitCode]
+  /// the exitCode of the last [HasExitCode] section is returned otherwise
+  /// 0 is returned.
   core.Future<core.int> exitCode() async => _run();
 
   /// Returns the 'out' stream and the 'err' stream
   /// as two separate lists.
   /// Each list can hold up to [maxBuffer] elements.
+  /// If one or more of the [PipeSection] implements [HasExitCode]
+  /// the exitCode of the last [HasExitCode] section is available in the
+  /// [CaptureBoth] otherwise the exitCode is set to zero.
   /// The [captureMode] controls whether the fist [maxBuffer] elements (head)
   /// or the last [maxBuffer] elements (tail) are returned.
   Future<CaptureBoth<T>> captureBoth(
@@ -175,6 +183,13 @@ class PipePhase<T> {
     return capture;
   }
 
+  /// Returns the 'out' stream and discards the 'err'stream.
+  /// The [CaptureOut.out] list can hold up to [maxBuffer] elements.
+  /// If one or more of the [PipeSection] implements [HasExitCode]
+  /// the exitCode of the last [HasExitCode] section is available in the
+  /// [CaptureOut] otherwise the exitCode is set to zero.
+  /// The [captureMode] controls whether the fist [maxBuffer] elements (head)
+  /// or the last [maxBuffer] elements (tail) are returned.
   core.Future<CaptureOut<T>> captureOut(
       {int maxBuffer = 10000,
       CaptureMode captureMode = CaptureMode.tail}) async {
@@ -184,7 +199,15 @@ class PipePhase<T> {
     return capture;
   }
 
-  Future<CaptureErr<T>> captureErr(List<T> list,
+  /// Returns the 'err' stream and discards the 'out'stream.
+  /// The [CaptureErr.err] list can hold up to [maxBuffer] elements.
+  ///
+  /// If one or more of the [PipeSection] implements [HasExitCode]
+  /// the exitCode of the last [HasExitCode] section is available in the
+  /// [CaptureOut] otherwise the exitCode is set to zero.
+  /// The [captureMode] controls whether the fist [maxBuffer] elements (head)
+  /// or the last [maxBuffer] elements (tail) are returned.
+  Future<CaptureErr<T>> captureErr(
       {int maxBuffer = 10000,
       CaptureMode captureMode = CaptureMode.tail}) async {
     final capture = CaptureErr<T>();
@@ -211,22 +234,11 @@ class PipePhase<T> {
     });
   }
 
-  // TODO: what does it mean to run toList and then want to
-  // get a non-zero exitcode.
-  // can we do both. Seams a problem as to List returns a list.
-  // We have scenarios such as docker buildex which returns the id
-  // via stdout but general logging is via stderr.
-  // So in the case we need to gret a list from stderr, one line from stdout
-  // and the exit code to ensure that everything worked.
-
-  // This suggest that we need a double headed toList command that
-  // provides stdout and stderr as separate lists
-
   /// Runs the pipeline returning the last [n] lines of the output.
   /// If you choose to capture err and out then they are mixed in the
   /// list in the order the pipeline outputs them.
-  /// Returns the exitCode of the last command in the pipeline or
-  /// 0 if no commands are included in the pipeline.
+  /// If any of the [PipeSection]s returns an non-zero exit code then an
+  /// exception is thrown.
   Future<List<T>> tail(int n,
           {bool captureOut = true, bool captureErr = false}) async =>
       (await captureMixed(
@@ -236,15 +248,15 @@ class PipePhase<T> {
   /// Runs the pipeline returning the fist [n] lines of the output.
   /// This is actually the default mode of [captureOut] but we include
   /// this method for symmetry with the tail method.
-  /// Returns the exitCode of the last command in the pipeline or
-  /// 0 if no commands are included in the pipeline.
+  /// If any of the [PipeSection]s returns an non-zero exit code then an
+  /// exception is thrown.
   Future<List<T>> head(int n,
           {bool captureOut = true, bool captureErr = false}) async =>
       (await captureMixed(
               maxBuffer: n, captureErr: captureErr, captureOut: captureOut))
           .mixed;
 
-  /// Runs the pipeline printing the stdout stream to stdout and the
+  /// Runs the pipeline printing the out stream to stdout and the
   /// err stream to stderr.
   /// If the streams are a `List<int>` we automatically
   /// convert it to a `List<String>`
@@ -270,7 +282,7 @@ class PipePhase<T> {
     return _run();
   }
 
-  /// Runs the pipeline printing the output stream to stdout.
+  /// Runs the pipeline printing the out stream to stdout.
   /// If the stream is a `List<int>` we automatically
   /// convert it to a `List<String>`
   /// The error stream is supressed.
@@ -279,7 +291,7 @@ class PipePhase<T> {
   /// last one is returned otherwise 0 is returned.
   Future<int> print() async => printmix(showStderr: false);
 
-  /// Runs the pipeline printing the error stream to stderr.
+  /// Runs the pipeline printing the err stream to stderr.
   /// If the stream is a `List<int>` we automatically
   /// convert it to a `List<String>`
   ///
