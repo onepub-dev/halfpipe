@@ -3,7 +3,7 @@
 import 'dart:convert';
 import 'dart:core' as core;
 import 'dart:core';
-import 'dart:io';
+import 'dart:io' as io;
 
 import 'package:async/async.dart';
 import 'package:logging/logging.dart';
@@ -98,7 +98,7 @@ class PipePhase<T> {
   /// The error stream is passed through to the next phase but
   /// not written to the file.
   PipePhase<T> write(String pathToFile) {
-    final fileSink = File(pathToFile).openWrite();
+    final fileSink = io.File(pathToFile).openWrite();
     return block<T>((srcIn, srcErr, sinkOut, sinkErr) async {
       srcIn.listen(fileSink.write, onDone: fileSink.close);
       await sinkErr.addStream(srcErr);
@@ -244,10 +244,13 @@ class PipePhase<T> {
               maxBuffer: n, captureErr: captureErr, captureOut: captureOut))
           .mixed;
 
-  /// Runs the pipeline printing stdout and stderr
-  /// to the console.
-  /// If the streams are a List<int> we automatically
-  /// convert it to a List<String>
+  /// Runs the pipeline printing the stdout stream to stdout and the
+  /// err stream to stderr.
+  /// If the streams are a `List<int>` we automatically
+  /// convert it to a `List<String>`
+  ///
+  /// If one of the [PipeSection]s runs a Command then exit code from the
+  /// last one is returned otherwise 0 is returned.
   Future<int> printmix({bool showStdout = true, bool showStderr = true}) async {
     if (T == List<int>) {
       sections.add(TransformerPipeSection<List<int>, String>(Transform.line));
@@ -259,7 +262,7 @@ class PipePhase<T> {
           srcIn.listen(core.print);
         }
         if (showStderr) {
-          srcErr.listen(core.print);
+          srcErr.listen((data) => io.stderr.write(data));
         }
       },
     ));
@@ -268,15 +271,20 @@ class PipePhase<T> {
   }
 
   /// Runs the pipeline printing the output stream to stdout.
-  /// If the stream is a List<int> we automatically
-  /// convert it to a List<String>
+  /// If the stream is a `List<int>` we automatically
+  /// convert it to a `List<String>`
   /// The error stream is supressed.
+  ///
+  /// If one of the [PipeSection]s runs a Command then exit code from the
+  /// last one is returned otherwise 0 is returned.
   Future<int> print() async => printmix(showStderr: false);
 
-  /// Runs the pipeline printing the error stream to stdout.
-  /// If the stream is a List<int> we automatically
-  /// convert it to a List<String>
-  /// The output stream is supressed.
+  /// Runs the pipeline printing the error stream to stderr.
+  /// If the stream is a `List<int>` we automatically
+  /// convert it to a `List<String>`
+  ///
+  /// If one of the [PipeSection]s runs a Command then exit code from the
+  /// last one is returned otherwise 0 is returned.
   Future<int> printerr() async => printmix(showStdout: false);
 
   /// The output of the final phase is funnelled into
@@ -351,6 +359,7 @@ class PipePhase<T> {
   Stream<List<T>> get stderr => sinkErrController.stream as Stream<List<T>>;
 
   Future<Stream<core.List<T>>> get stdmix async => mixStreams(stdout, stderr);
+
 // Function to mix two streams
   Future<Stream<S>> mixStreams<S>(Stream<S> stream1, Stream<S> stream2) async {
     // Create a StreamGroup
@@ -366,26 +375,4 @@ class PipePhase<T> {
     // Return the combined stream from the StreamGroup
     return group.stream;
   }
-
-  Future<void> main() async {
-    // Example streams
-    final stream1 = Stream.fromIterable([1, 3, 5]);
-    final stream2 = Stream.fromIterable([2, 4, 6]);
-
-    // Mix the streams
-    final mixedStream = await mixStreams(stream1, stream2);
-
-    // Listen to the mixed stream
-    mixedStream.listen(core.print);
-  }
-}
-
-class Terminal {
-  // TODO(bsutton): fix this
-  int get exitCode => 0;
-}
-
-class Lists<T> {
-  List<T> out = <T>[];
-  List<T> err = <T>[];
 }
