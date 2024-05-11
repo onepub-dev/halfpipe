@@ -7,6 +7,7 @@ environment:
 
 
 dependencies: 
+  args: ^2.5.0
   async: ^2.11.0
   completer_ex: ^4.0.2
   dcli: ^4.0.1-beta.4

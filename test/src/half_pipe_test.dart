@@ -18,6 +18,10 @@ void main() {
     print('${record.level.name}: ${record.time}: ${record.message}');
   });
 
+  setUpAll(() async {
+    expect(File(join('test', 'test_app.dart')).existsSync(), true);
+  });
+
   group('half_pipe', () {
     test('command with line transform', () async {
       await withTempDirAsync((tempDir) async {
@@ -154,10 +158,7 @@ and a second line''');
 
       await HalfPipe()
           .commandAndArgs('ls',
-              args: ['-la'],
-              runInShell: true,
-              terminal: true,
-              extensionSearch: false)
+              args: ['-la'], runInShell: true, extensionSearch: false)
           .print();
     });
   });
