@@ -45,7 +45,7 @@ class RunProcess {
   bool extensionSearch;
 
   Stream<List<int>> get stdout {
-    if (process == null) {
+    if (_process == null) {
       throw StateError('You must first call [RunProcess.start]');
     }
 
@@ -53,18 +53,18 @@ class RunProcess {
       throw StateError(
           '''When `terminal` is true ther process does not have its own stdout but is directly attached to the terminals stdout''');
     }
-    return process!.stdout;
+    return _process!.stdout;
   }
 
   Stream<List<int>> get stderr {
-    if (process == null) {
+    if (_process == null) {
       throw StateError('You must first call [RunProcess.start]');
     }
-    return process!.stderr;
+    return _process!.stderr;
   }
 
   IOSink get stdin {
-    if (process == null) {
+    if (_process == null) {
       throw StateError('You must first call [RunProcess.start]');
     }
 
@@ -73,17 +73,17 @@ class RunProcess {
           '''When `terminal` is true, the process does not have its own stdin but is directly attached to the terminals stdin''');
     }
 
-    return process!.stdin;
+    return _process!.stdin;
   }
 
-  Process? process;
+  Process? _process;
 
   Future<int> get exitCode {
-    if (process == null) {
+    if (_process == null) {
       throw StateError('You must first call [RunProcess.start]');
     }
 
-    return process!.exitCode;
+    return _process!.exitCode;
   }
 
   Future<void> start() async {
@@ -121,7 +121,7 @@ class RunProcess {
       );
     }
     try {
-      process = await Process.start(
+      _process = await Process.start(
         _parsed.cmd,
         _parsed.args,
         runInShell: runInShell,
@@ -130,6 +130,14 @@ class RunProcess {
         environment: envs,
       );
     } on ProcessException catch (ep, _) {
+      if (Platform.isWindows && ep.errorCode == 193) {
+        throw RunException.withArgs(
+          ep.executable,
+          ep.arguments,
+          ep.errorCode,
+          '${ep.executable} is not a valid application.',
+        );
+      }
       if (ep.errorCode == 2) {
         throw RunException.withArgs(
           ep.executable,
