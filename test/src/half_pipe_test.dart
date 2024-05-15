@@ -12,6 +12,8 @@ import 'package:logging/logging.dart';
 import 'package:path/path.dart' hide equals;
 import 'package:test/test.dart' hide Skip;
 
+import 'test_app.dart';
+
 void main() {
   Logger.root.level = Level.INFO; // defaults to Level.INFO
   Logger.root.onRecord.listen((record) {
@@ -19,7 +21,7 @@ void main() {
   });
 
   setUpAll(() async {
-    expect(File(join('test', 'test_app.dart')).existsSync(), true);
+    expect(File(pathToTestApp).existsSync(), true);
   });
 
   group('half_pipe', () {
@@ -102,7 +104,7 @@ some text
 and a second line''');
         await HalfPipe()
             .processor(ReadFile(pathToLineFile))
-            .command('runme')
+            .command(buildTestAppCommand())
             .processor(Tee(pipe))
             .transform<String>(Transform.line)
             .block<String>((srcIn, srcErr, sinkOut, sinkErr) async {
