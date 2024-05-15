@@ -10,9 +10,9 @@ dependencies:
   args: ^2.5.0
   async: ^2.11.0
   completer_ex: ^4.0.2
-  dcli: ^4.0.1-beta.4
-  dcli_common: ^4.0.1-beta.4
-  dcli_core: ^4.0.1-beta.4
+  dcli: ^4.0.0
+  dcli_common: ^4.0.0
+  dcli_core: ^4.0.0
   file: ^7.0.0
   glob: ^2.1.2
   logging: ^1.2.0
