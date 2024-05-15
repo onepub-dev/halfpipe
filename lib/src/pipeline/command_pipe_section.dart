@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:completer_ex/completer_ex.dart';
 import 'package:logging/logging.dart';
 
+import '../run_exception.dart';
 import '../run_process.dart';
 import '../util/stream_controller_ex.dart';
 import 'pipe_section.dart';
@@ -13,16 +14,20 @@ abstract class HasExitCode {
   int get exitCode;
 }
 
+enum _StartType { runWithArgs, runWithCommandLine }
+
 class CommandPipeSection extends PipeSection<List<int>, List<int>>
     implements HasExitCode {
   CommandPipeSection.commandLine(String commandLine,
       {bool runInShell = false,
       bool detached = false,
       bool terminal = false,
-      bool nothrow = false,
+      this.nothrow = false,
       bool extensionSearch = false,
       String? workingDirectory})
-      : runProcess = RunProcess.commandLine(commandLine,
+      : _startType = _StartType.runWithCommandLine,
+        _commandLine = commandLine,
+        runProcess = RunProcess.commandLine(commandLine,
             runInShell: runInShell,
             detached: detached,
             terminal: terminal,
@@ -34,11 +39,14 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>>
       {bool runInShell = false,
       bool detached = false,
       bool terminal = false,
-      bool nothrow = false,
+      this.nothrow = false,
       bool extensionSearch = false,
       List<String>? args,
       String? workingDirectory})
-      : runProcess = RunProcess.withArgList(command,
+      : _startType = _StartType.runWithArgs,
+        _command = command,
+        _args = args,
+        runProcess = RunProcess.withArgList(command,
             args: args,
             runInShell: runInShell,
             detached: detached,
@@ -50,6 +58,14 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>>
   final _log = Logger((CommandPipeSection).toString());
 
   RunProcess runProcess;
+
+  final bool nothrow;
+
+  final _StartType _startType;
+
+  String? _commandLine;
+  String? _command;
+  List<String>? _args;
 
   @override
   late final int exitCode;
@@ -96,7 +112,18 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>>
         runProcess.exitCode
       ]).then((value) async {
         exitCode = await runProcess.exitCode;
-        done.complete();
+
+        if (exitCode == 0 || nothrow == true) {
+          done.complete();
+        } else {
+          if (_startType == _StartType.runWithArgs) {
+            done.completeError(RunException.withArgs(_command, _args ?? [],
+                exitCode, 'The command exited with a non-zero exit code.'));
+          } else {
+            done.completeError(RunException(_commandLine!, exitCode,
+                'The command exited with a non-zero exit code.'));
+          }
+        }
       }));
       // ignore: avoid_catches_without_on_clauses
     } catch (e) {
