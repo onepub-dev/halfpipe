@@ -5,6 +5,8 @@ import '../util/stream_controller_ex.dart';
 
 /// Runs [callback] with access to [stdin] for the duration of the
 /// call.
+/// Using this method allows multiple [callback]s to sequentially
+/// access [stdin] without throwing an error.
 Future<void> withStdin(
     Future<void> Function(StreamControllerEx<List<int>>) callback,
     {String? debugName}) async {

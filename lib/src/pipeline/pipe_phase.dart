@@ -326,6 +326,7 @@ class PipePhase<T> {
 
       // final sectionCompleters = <CompleterEx<void>>[];
 
+      // start each section running
       for (final section in sections) {
         section.start(
           priorOutController,
@@ -336,11 +337,14 @@ class PipePhase<T> {
         priorErrController = section.errController;
       }
 
+      /// Wire up the final section's output and error
+      /// streams to the final sinks.
       priorOutController.stream
           .listen((data) => sinkOutController.add(data as T));
       priorErrController.stream
           .listen((data) => sinkErrController.add(data as T));
 
+      /// Wait for all sections to complete.  
       for (var i = 0; i < sections.length; i++) {
         final section = sections[i];
         log.fine(() => 'waiting for section: ${section.debugName} to complete');
