@@ -6,7 +6,6 @@ import 'package:dcli_core/dcli_core.dart';
 import 'package:halfpipe/src/half_pipe.dart';
 import 'package:halfpipe/src/processors/read_file.dart';
 import 'package:halfpipe/src/processors/skip.dart';
-import 'package:halfpipe/src/processors/tee.dart';
 import 'package:halfpipe/src/transformers/transform.dart';
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' hide equals;
@@ -118,7 +117,7 @@ and a second line''');
           await HalfPipe()
               .processor(ReadFile(pathToLineFile))
               .command(buildTestAppCommand())
-              .processor(Tee(pipe))
+              //   .processor(Tee(pipe))
               .transform<String>(Transform.line)
               .block<String>((srcIn, srcErr, sinkOut, sinkErr) async {
             /// do some processing in dart.
