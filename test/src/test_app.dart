@@ -6,6 +6,8 @@
 ///   with a number
 /// 3) the number of lines to output to stderr, each line is prefixed
 ///    with a number
+// ignore_for_file: unreachable_from_main
+
 library;
 
 import 'dart:io';
