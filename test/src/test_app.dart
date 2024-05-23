@@ -17,7 +17,6 @@ import 'package:dcli_core/dcli_core.dart';
 import 'package:path/path.dart';
 
 /// The path to the test app - so that unit tests can call us.
-// ignore: unreachable_from_main
 final pathToTestApp = join(pwd, 'test', 'src', 'test_app.dart');
 
 void main(List<String> arguments) {
@@ -46,7 +45,6 @@ void main(List<String> arguments) {
 }
 
 /// Builds a command line to run this test app.
-// ignore: unreachable_from_main
 String buildTestAppCommand(
     {int exitCode = 0, int outLines = 0, int errLines = 0}) {
   final sb = StringBuffer()
