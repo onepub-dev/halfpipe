@@ -55,7 +55,7 @@ class PipePhase<T> {
     return _changeType<List<int>>(this);
   }
 
-  PipePhase<int> commandAndArgs(String command,
+  PipePhase<List<int>> commandAndArgs(String command,
       {List<String>? args,
       bool runInShell = false,
       bool detached = false,
@@ -71,7 +71,7 @@ class PipePhase<T> {
         nothrow: nothrow,
         extensionSearch: extensionSearch,
         workingDirectory: workingDirectory));
-    return _changeType<int>(this);
+    return _changeType<List<int>>(this);
   }
 
   /// Defines a block of dart code that can is called as
@@ -344,7 +344,7 @@ class PipePhase<T> {
       priorErrController.stream
           .listen((data) => sinkErrController.add(data as T));
 
-      /// Wait for all sections to complete.  
+      /// Wait for all sections to complete.
       for (var i = 0; i < sections.length; i++) {
         final section = sections[i];
         log.fine(() => 'waiting for section: ${section.debugName} to complete');
@@ -371,10 +371,10 @@ class PipePhase<T> {
     return out;
   }
 
-  Stream<List<T>> get stdout => sinkOutController.stream as Stream<List<T>>;
-  Stream<List<T>> get stderr => sinkErrController.stream as Stream<List<T>>;
+  Stream<T> get stdout => sinkOutController.stream;
+  Stream<T> get stderr => sinkErrController.stream;
 
-  Future<Stream<core.List<T>>> get stdmix async => mixStreams(stdout, stderr);
+  Future<Stream<T>> get stdmix async => mixStreams(stdout, stderr);
 
 // Function to mix two streams
   Future<Stream<S>> mixStreams<S>(Stream<S> stream1, Stream<S> stream2) async {
