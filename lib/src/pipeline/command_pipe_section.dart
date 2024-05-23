@@ -70,9 +70,7 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>>
   @override
   late final int exitCode;
 
-  // If we wait now then we stop the next stage in the pipeline
-  // from running.
-  // exitCode = await runProcess.exitCode;
+  /// Used to flag that that this pipe section has completed.
   @override
   final done = CompleterEx<void>(debugName: 'CommandPipe: done');
 
