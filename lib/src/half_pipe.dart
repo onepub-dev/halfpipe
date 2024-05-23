@@ -38,7 +38,7 @@ class HalfPipe {
         workingDirectory: workingDirectory,
       );
 
-  PipePhase<int> commandAndArgs(String command,
+  PipePhase<List<int>> commandAndArgs(String command,
           {List<String>? args,
           bool runInShell = false,
           bool detached = false,
