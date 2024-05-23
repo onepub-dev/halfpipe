@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:dcli/dcli.dart';
 
 import 'half_pipe.dart';
@@ -21,7 +19,7 @@ extension StringAsProcess on String {
   }
 
   /// start
-  PipePhase<int> start({
+  PipePhase<List<int>> start({
     String? workingDirectory,
     bool runInShell = false,
     bool detached = false,
@@ -86,9 +84,9 @@ extension StringAsProcess on String {
             nothrow: nothrow,
             workingDirectory: workingDirectory,
             extensionSearch: extensionSearch)
-        .transform(Transform.line as Converter<int, dynamic>);
+        .transform(Transform.line);
 
-    (await pipe.stdmix).listen((lines) => lines.addAll(lines));
+    (await pipe.stdmix).listen(lines.add);
 
     return lines.sublist(skipLines);
   }
