@@ -1,5 +1,6 @@
 // ignore_for_file: avoid_returning_this, strict_raw_type
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:core' as core;
 import 'dart:core';
@@ -352,8 +353,19 @@ class PipePhase<T> {
         log.fine(() => 'closing section ${section.debugName}');
         await section.close();
       }
-      // await sub.cancel();
-      await stdinController.close();
+
+      /// A controller will not close if it has any listeners
+      /// or it has never been listened to.
+      if (stdinController.hasListener) {
+        await stdinController.close();
+      }
+      if (sinkOutController.hasListener) {
+        await sinkOutController.close();
+      }
+
+      if (sinkErrController.hasListener) {
+        await sinkErrController.close();
+      }
     });
 
     var exitCode = 0;
@@ -371,8 +383,15 @@ class PipePhase<T> {
     return out;
   }
 
-  Stream<T> get stdout => sinkOutController.stream;
-  Stream<T> get stderr => sinkErrController.stream;
+  core.Stream<T> get stdout {
+    unawaited(_run());
+    return sinkOutController.stream;
+  }
+
+  core.Stream<T> get stderr {
+    unawaited(_run());
+    return sinkErrController.stream;
+  }
 
   Future<Stream<T>> get stdmix async => mixStreams(stdout, stderr);
 
