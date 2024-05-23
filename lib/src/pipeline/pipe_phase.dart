@@ -97,7 +97,7 @@ class PipePhase<T> {
   /// Writes the output stream to the file located at [pathToFile].
   /// The error stream is passed through to the next phase but
   /// not written to the file.
-  PipePhase<T> write(String pathToFile) {
+  PipePhase<T> writeToFile(String pathToFile) {
     final fileSink = io.File(pathToFile).openWrite();
     return block<T>((srcIn, srcErr, sinkOut, sinkErr) async {
       srcIn.listen(fileSink.write, onDone: fileSink.close);
@@ -344,7 +344,7 @@ class PipePhase<T> {
       priorErrController.stream
           .listen((data) => sinkErrController.add(data as T));
 
-      /// Wait for all sections to complete.  
+      /// Wait for all sections to complete.
       for (var i = 0; i < sections.length; i++) {
         final section = sections[i];
         log.fine(() => 'waiting for section: ${section.debugName} to complete');

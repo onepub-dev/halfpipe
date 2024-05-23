@@ -1,11 +1,9 @@
 import 'package:dcli_core/dcli_core.dart' hide RunException;
 import 'package:halfpipe/halfpipe.dart';
 import 'package:halfpipe/src/run_exception.dart';
-import 'package:path/path.dart' hide equals;
 import 'package:test/test.dart';
 
 import '../test_app.dart';
-
 
 void main() {
   /// Test that the [CommandPipeSection] completes when the command completes
