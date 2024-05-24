@@ -9,18 +9,18 @@ import '../util/stream_controller_ex.dart';
 import 'pipe_section.dart';
 
 class ProcessorPipeSection<I, O> extends PipeSection<I, O> {
-  ProcessorPipeSection(this.transformer);
+  ProcessorPipeSection(this.processor);
 
-  Processor<I, O> transformer;
+  Processor<I, O> processor;
 
   @override
-  CompleterEx<void> get done => transformer.done;
+  CompleterEx<void> get done => processor.done;
 
   @override
   Future<void> start(
           StreamControllerEx<I> srcIn, StreamControllerEx<I> srcErr) async =>
-      transformer.start(srcIn, srcErr);
+      processor.start(srcIn, srcErr);
 
   @override
-  String get debugName => 'proscessor';
+  String get debugName => 'processor';
 }
