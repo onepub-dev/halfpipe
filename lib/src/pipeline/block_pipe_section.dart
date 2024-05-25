@@ -16,8 +16,10 @@ class BlockPipeSection<I, O> extends PipeSection<I, O> {
 
   Block<I, O> action;
 
+  final _done = CompleterEx<void>(debugName: 'BlockSection');
+
   @override
-  final done = CompleterEx<void>(debugName: 'BlockSection');
+  Future<void> get waitUntilComplete => _done.future;
 
   @override
   Future<void> start(StreamControllerEx<dynamic> srcIn,
@@ -27,7 +29,7 @@ class BlockPipeSection<I, O> extends PipeSection<I, O> {
             errController.sink)
         .then((_) async {
       _log.fine(() => 'block is done');
-      done.complete();
+      _done.complete();
     });
   }
 

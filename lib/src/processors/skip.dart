@@ -8,8 +8,10 @@ import 'processor.dart';
 class Skip extends Processor<String, String> {
   Skip(this.linesToSkip);
   int linesToSkip;
+  final _done = CompleterEx<void>(debugName: 'SkipSection');
+
   @override
-  final done = CompleterEx<void>(debugName: 'SkipSection');
+  Future<void> get waitUntilComplete => _done.future;
   @override
   Future<void> start(
     StreamControllerEx<String> srcIn,
@@ -25,8 +27,13 @@ class Skip extends Processor<String, String> {
         outController.sink.add(line);
       }
     })
-      ..onDone(done.complete)
-      ..onError(done.completeError);
+      ..onDone(() {
+        // onError may already have called completed
+        if (!_done.isCompleted) {
+          _done.complete();
+        }
+      })
+      ..onError(_done.completeError);
 
     // write [srcErr] directly to [sinkErr]
     await errController.sink.addStream(srcErr.stream);

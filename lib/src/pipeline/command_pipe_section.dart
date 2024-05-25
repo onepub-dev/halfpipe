@@ -71,8 +71,10 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>>
   late final int exitCode;
 
   /// Used to flag that that this pipe section has completed.
+  final _done = CompleterEx<void>(debugName: 'CommandPipe: done');
+
   @override
-  final done = CompleterEx<void>(debugName: 'CommandPipe: done');
+  Future<void> get waitUntilComplete => _done.future;
 
   @override
   Future<void> start(
@@ -112,20 +114,20 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>>
         exitCode = await runProcess.exitCode;
 
         if (exitCode == 0 || nothrow == true) {
-          done.complete();
+          _done.complete();
         } else {
           if (_startType == _StartType.runWithArgs) {
-            done.completeError(RunException.withArgs(_command, _args ?? [],
+            _done.completeError(RunException.withArgs(_command, _args ?? [],
                 exitCode, 'The command exited with a non-zero exit code.'));
           } else {
-            done.completeError(RunException(_commandLine!, exitCode,
+            _done.completeError(RunException(_commandLine!, exitCode,
                 'The command exited with a non-zero exit code.'));
           }
         }
       }));
       // ignore: avoid_catches_without_on_clauses
     } catch (e) {
-      done.completeError(e);
+      _done.completeError(e);
     }
   }
 

@@ -18,9 +18,11 @@ abstract class PipeSection<I, O> with PipeSectionMixin<O> {
   /// generating/processing the [srcIn] and [srcErr] streams.
   void start(StreamControllerEx<I> srcIn, StreamControllerEx<I> srcErr);
 
-  /// The [done] completer 'completes' when this section has finished
-  /// processing data from its input streams;
-  CompleterEx<void> get done;
+  // /// The [done] completer 'completes' when this section has finished
+  // /// processing data from its input streams;
+  // CompleterEx<void> get done;
+
+  Future<void> get waitUntilComplete;
 
   /// Called when the pipeline is shutting down to give each
   /// section a chance to free any resources.

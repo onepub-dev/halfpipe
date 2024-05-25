@@ -17,8 +17,11 @@ class Tee<T> extends Processor<T, T> {
 
   PassThrough<T, T> injector = PassThrough();
   PipePhase<T> other;
+
+  final _done = CompleterEx<void>(debugName: 'Tee');
+
   @override
-  final done = CompleterEx<void>(debugName: 'Tee');
+  Future<void> get waitUntilComplete => _done.future;
 
   @override
   Future<void> start(
@@ -28,7 +31,12 @@ class Tee<T> extends Processor<T, T> {
       stdout.write(data);
       injector.outController.add(data);
     })
-      ..onDone(inCompleter.complete)
+      ..onDone(() {
+        // onError may already have called completed
+        if (!inCompleter.isCompleted) {
+          inCompleter.complete();
+        }
+      })
       ..onError(inCompleter.completeError);
 
     final errCompleter = CompleterEx<void>(debugName: 'Tee:Stdout');
@@ -36,11 +44,16 @@ class Tee<T> extends Processor<T, T> {
       stderr.writeln(line);
       injector.errController.add(line);
     })
-      ..onDone(errCompleter.complete)
+      ..onDone(() {
+        // onError may already have called completed
+        if (!errCompleter.isCompleted) {
+          errCompleter.complete(true);
+        }
+      })
       ..onError(errCompleter.completeError);
 
     unawaited(Future.wait([inCompleter.future, errCompleter.future])
-        .then((_) => done.complete()));
+        .then((_) => _done.complete()));
   }
 
   @override

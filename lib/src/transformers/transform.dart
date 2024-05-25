@@ -11,8 +11,10 @@ class Transform<I, O> extends Transformer<I, O> {
   Transform(this.converter);
   Converter<I, O> converter;
 
+  final _done = CompleterEx<void>(debugName: 'Transform');
+
   @override
-  final done = CompleterEx<void>(debugName: 'Transform');
+  Future<void> get waitUntilComplete => _done.future;
 
   @override
   Future<void> start(
@@ -20,8 +22,11 @@ class Transform<I, O> extends Transformer<I, O> {
     srcIn.stream.transform(converter).listen((event) {
       outController.sink.add(event);
     }, onDone: () async {
-      done.complete();
-    }, onError: done.completeError);
+      // onError may already have called completed
+      if (!_done.isCompleted) {
+        _done.complete();
+      }
+    }, onError: _done.completeError);
   }
 
   static Utf8LineSplitter get line => Utf8LineSplitter();

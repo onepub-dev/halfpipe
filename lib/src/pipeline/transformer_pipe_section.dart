@@ -21,8 +21,10 @@ class TransformerPipeSection<I, O> extends PipeSection<I, O> {
   // If we wait now then we stop the next stage in the pipeline
   // from running.
   // exitCode = await runProcess.exitCode;
+  final _done = CompleterEx<void>(debugName: 'TransformerSection: done');
+
   @override
-  final done = CompleterEx<void>(debugName: 'TransformerSection: done');
+  Future<void> get waitUntilComplete => _done.future;
 
   @override
   Future<void> start(
@@ -37,25 +39,35 @@ class TransformerPipeSection<I, O> extends PipeSection<I, O> {
     inputConversionSinkForErr =
         transformer.startChunkedConversion(errController.sink);
 
+    /// wire source
     srcIn.stream.listen((data) {
       _log.fine(() => 'Transformer: got data $data');
       inputConversionSinkForOut!.add(data);
     }, onDone: () {
       _log.fine(() => 'Transfomer: done - out');
-      outCompleter.complete(true);
+      // onError may already have called completed
+      if (!outCompleter.isCompleted) {
+        outCompleter.complete(true);
+      }
     }, onError: outCompleter.completeError);
+
+    /// wire error
     srcErr.stream.listen((data) {
       _log.fine(() => 'Transformer: addErr');
       inputConversionSinkForErr!.add(data);
     }, onDone: () {
       _log.fine(() => 'Transfomer: done - err');
-      errCompleter.complete(true);
+
+      // onError may already have called completed
+      if (!errCompleter.isCompleted) {
+        errCompleter.complete(true);
+      }
     }, onError: errCompleter.completeError);
 
     unawaited(Future.wait<bool>([outCompleter.future, errCompleter.future])
         // ignore: prefer_expression_function_bodies
         .then((_) {
-      done.complete();
+      _done.complete();
     }));
   }
 

@@ -2,8 +2,6 @@
 
 import 'dart:async';
 
-import 'package:completer_ex/completer_ex.dart';
-
 import '../processors/processor.dart';
 import '../util/stream_controller_ex.dart';
 import 'pipe_section.dart';
@@ -14,7 +12,7 @@ class ProcessorPipeSection<I, O> extends PipeSection<I, O> {
   Processor<I, O> processor;
 
   @override
-  CompleterEx<void> get done => processor.done;
+  Future<void> get waitUntilComplete => processor.waitUntilComplete;
 
   @override
   Future<void> start(

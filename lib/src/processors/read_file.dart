@@ -10,8 +10,10 @@ class ReadFile extends Processor<List<int>, List<int>> {
   ReadFile(this.pathToFile);
   String pathToFile;
 
+  late final _done = CompleterEx<void>(debugName: 'ReadFile');
+
   @override
-  final done = CompleterEx<void>(debugName: 'ReadFile');
+  Future<void> get waitUntilComplete => _done.future;
 
   @override
   Future<void> start(
@@ -26,14 +28,18 @@ class ReadFile extends Processor<List<int>, List<int>> {
       fileStream.listen((event) {
         stdout.write(event);
       })
-        ..onDone(done.complete)
-        ..onError(done.completeError);
+        ..onDone(() {
+          if (!_done.isCompleted) {
+            _done.complete();
+          }
+        })
+        ..onError(_done.completeError);
 
       await errController.sink.addStream(srcErr.stream);
     }
     // ignore: avoid_catches_without_on_clauses
     catch (e) {
-      done.completeError(e);
+      _done.completeError(e);
     }
   }
 

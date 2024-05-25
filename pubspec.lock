@@ -21,10 +21,10 @@ packages:
     dependency: transitive
     description:
       name: archive
-      sha256: ecf4273855368121b1caed0d10d4513c7241dfc813f7d3c8933b36622ae9b265
+      sha256: "6bd38d335f0954f5fad9c79e614604fbf03a0e5b975923dd001b6ea965ef5b4b"
       url: "https://pub.dev"
     source: hosted
-    version: "3.5.1"
+    version: "3.6.0"
   args:
     dependency: "direct main"
     description:
@@ -93,10 +93,10 @@ packages:
     dependency: "direct main"
     description:
       name: completer_ex
-      sha256: "5a2f6c570a59958cce85e8ed582cbf70184fa6691b5e79d65ec3f02285492e04"
+      sha256: dcee72f40271b31a0c05a47d8e50e7b678175cfb9320ef0ef412e775e9a32416
       url: "https://pub.dev"
     source: hosted
-    version: "4.0.2"
+    version: "4.0.3"
   convert:
     dependency: transitive
     description:
@@ -141,10 +141,10 @@ packages:
     dependency: "direct main"
     description:
       name: dcli
-      sha256: f84f0ad87e46140a98d145b69d761858177bd79dd39ac3615afba72074f26e44
+      sha256: "12ef06b5b99d092eb37d9598dbc0a49807abac40390085afd2be11f604607705"
       url: "https://pub.dev"
     source: hosted
-    version: "4.0.0"
+    version: "4.0.1"
   dcli_common:
     dependency: "direct main"
     description:
@@ -445,10 +445,10 @@ packages:
     dependency: transitive
     description:
       name: settings_yaml
-      sha256: abfd2a6a2c48883154ffe11ddd4f72ce43cc2d7f030ae060f7237fb3b2bddbf7
+      sha256: "415bc91cbcfe8b66b0945fdad8823b439ec9bd31591db6c1a4d2d07cab97899d"
       url: "https://pub.dev"
     source: hosted
-    version: "8.1.0-alpha.2"
+    version: "8.1.0"
   shelf:
     dependency: transitive
     description:
@@ -669,10 +669,10 @@ packages:
     dependency: transitive
     description:
       name: web_socket
-      sha256: bfe704c186c6e32a46f6607f94d079cd0b747b9a489fceeecc93cd3adb98edd5
+      sha256: "217f49b5213796cb508d6a942a5dc604ce1cb6a0a6b3d8cb3f0c314f0ecea712"
       url: "https://pub.dev"
     source: hosted
-    version: "0.1.3"
+    version: "0.1.4"
   web_socket_channel:
     dependency: transitive
     description:
