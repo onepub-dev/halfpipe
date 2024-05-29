@@ -80,6 +80,8 @@ void main() {
       }).captureNone();
     });
 
+    
+
     test('half pipe - write', () async {
       await withTempDirAsync((tempDir) async {
         final pathToZip = join(tempDir, 'some.zip');

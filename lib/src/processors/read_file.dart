@@ -26,7 +26,7 @@ class ReadFile extends Processor<List<int>, List<int>> {
 
       /// write the contents of the file into the stream.
       fileStream.listen((event) {
-        stdout.write(event);
+        outController.sink.add(event);
       })
         ..onDone(() {
           if (!_done.isCompleted) {

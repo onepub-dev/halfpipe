@@ -6,3 +6,6 @@ dependency_overrides:
   # dcli_common:
   #   path: ../dcli-4.x/dcli_common
   pointycastle: 3.8.0
+
+  # completer_ex:
+  #   path: ../completer_ex

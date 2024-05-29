@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:completer_ex/completer_ex.dart';
 
@@ -15,7 +14,7 @@ class Tee<T> extends Processor<T, T> {
     other.sections.insert(0, injector);
   }
 
-  PassThrough<T, T> injector = PassThrough();
+  PassThrough<T> injector = PassThrough();
   PipePhase<T> other;
 
   final _done = CompleterEx<void>(debugName: 'Tee');
@@ -26,9 +25,9 @@ class Tee<T> extends Processor<T, T> {
   @override
   Future<void> start(
       StreamControllerEx<T> srcIn, StreamControllerEx<T> srcErr) async {
-    final inCompleter = CompleterEx<void>(debugName: 'Tee:Stdout');
+    final inCompleter = CompleterEx<void>(debugName: 'Tee:in');
     srcIn.stream.listen((data) {
-      stdout.write(data);
+      outController.sink.add(data);
       injector.outController.add(data);
     })
       ..onDone(() {
@@ -39,15 +38,15 @@ class Tee<T> extends Processor<T, T> {
       })
       ..onError(inCompleter.completeError);
 
-    final errCompleter = CompleterEx<void>(debugName: 'Tee:Stdout');
+    final errCompleter = CompleterEx<void>(debugName: 'Tee:err');
     srcErr.stream.listen((line) {
-      stderr.writeln(line);
+      errController.sink.add(line);
       injector.errController.add(line);
     })
       ..onDone(() {
         // onError may already have called completed
         if (!errCompleter.isCompleted) {
-          errCompleter.complete(true);
+          errCompleter.complete();
         }
       })
       ..onError(errCompleter.completeError);

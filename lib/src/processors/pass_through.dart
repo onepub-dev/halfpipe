@@ -1,12 +1,11 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:completer_ex/completer_ex.dart';
 
 import '../util/stream_controller_ex.dart';
 import 'processor.dart';
 
-class PassThrough<I, O> extends Processor<I, O> {
+class PassThrough<I> extends Processor<I, I> {
   final _done = CompleterEx<void>(debugName: 'PassThrough: done');
 
   @override
@@ -17,7 +16,7 @@ class PassThrough<I, O> extends Processor<I, O> {
       StreamControllerEx<I> srcIn, StreamControllerEx<I> srcErr) async {
     final inCompleter = CompleterEx<void>(debugName: 'PassThrough: In');
     srcIn.stream.listen((line) {
-      stdout.writeln(line);
+      outController.sink.add(line);
     })
       ..onDone(() {
         // onError may already have called completed
@@ -28,8 +27,8 @@ class PassThrough<I, O> extends Processor<I, O> {
       ..onError(inCompleter.completeError);
 
     final errCompleter = CompleterEx<void>(debugName: 'PassThrough: Err');
-    srcErr.stream.listen((line) {
-      stderr.writeln(line);
+    srcErr.stream.listen((data) {
+      errController.sink.add(data);
     })
       ..onDone(() {
         // onError may already have called completed
