@@ -352,10 +352,10 @@ class PipePhase<T> {
       }
 
       /// A controller will not close if it has any listeners
-      /// or it has never been listened to.
-      if (stdinController.hasListener) {
-        await stdinController.close();
-      }
+          /// or it has never been listened to.
+          if (stdinController.hasListener) {
+            await stdinController.close();
+          }
       if (sinkOutController.hasListener) {
         await sinkOutController.close();
       }
