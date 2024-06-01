@@ -2,6 +2,8 @@
 
 import 'dart:async';
 
+import 'package:logging/logging.dart';
+
 import '../processors/processor.dart';
 import '../util/stream_controller_ex.dart';
 import 'pipe_section.dart';
@@ -11,14 +13,46 @@ class ProcessorPipeSection<I, O> extends PipeSection<I, O> {
 
   Processor<I, O> processor;
 
+  final _log = Logger((ProcessorPipeSection).toString());
+
   @override
-  Future<void> get waitUntilComplete => processor.waitUntilComplete;
+  Future<void> get waitUntilOutputDone => processor.waitUntilOutputDone;
 
   @override
   Future<void> start(
-          StreamControllerEx<I> srcIn, StreamControllerEx<I> srcErr) async =>
-      processor.start(srcIn, srcErr);
+      StreamControllerEx<I> srcIn, StreamControllerEx<I> srcErr) async {
+    processor.start(srcIn, srcErr);
+  }
 
   @override
-  String get debugName => 'processor';
+  Future<void> close() async {
+    _log.fine(() =>
+        'starting close of $debugName for ${processor.outController.debugName}');
+
+    /// close will never complete if there are no listeners.
+    if (processor.outController.hasListener) {
+      await processor.outController.close();
+    }
+    _log
+      ..fine(() => 'closed out of $debugName')
+      ..fine(() => '''
+starting close of $debugName for ${processor.errController.debugName}''');
+
+    /// close will never complete if there are no listeners.
+    if (processor.errController.hasListener) {
+      await processor.errController.close();
+    }
+    _log.fine(() => 'closed err of $debugName');
+  }
+
+  // replace the controllers we inherit with the [processor]'s controllers as
+  // there is no point in having an extra controller in the middle.
+  @override
+  StreamControllerEx<O> get errController => processor.errController;
+
+  @override
+  StreamControllerEx<O> get outController => processor.outController;
+
+  @override
+  String get debugName => 'processor:${processor.debugName}';
 }
