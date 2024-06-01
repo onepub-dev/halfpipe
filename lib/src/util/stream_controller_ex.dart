@@ -44,11 +44,18 @@ class StreamControllerEx<T> implements StreamController<T> {
 
   @override
   void add(T event) {
+    if (_controller.isClosed) {
+      throw StateError('Cannot add event after closing $debugName');
+    }
     _controller.add(event);
   }
 
   @override
   void addError(Object error, [StackTrace? stackTrace]) {
+    if (_controller.isClosed) {
+      throw StateError('Cannot add error after closing $debugName');
+    }
+
     _controller.addError(error, stackTrace);
   }
 
@@ -99,4 +106,7 @@ class StreamControllerEx<T> implements StreamController<T> {
   set onResume(void Function()? _onResume) {
     _controller.onResume = _onResume;
   }
+
+  @override
+  String toString() => '$debugName';
 }
