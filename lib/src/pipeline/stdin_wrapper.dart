@@ -22,7 +22,7 @@ Future<void> withStdin(
 
 /// Stdin can only be listened to once but we allow users to create
 /// multiple pipelines and each needs the ability to dip into
-/// stdin at the point in time the run.
+/// stdin at the point in time they run.
 /// As stdin is a single stream this won't work as it can only be listended to
 /// once.
 /// This wrapper allows multiple listeners to subscribe to stdin and distributes
