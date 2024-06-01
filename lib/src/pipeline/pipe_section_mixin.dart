@@ -16,11 +16,16 @@ mixin PipeSectionMixin<O> {
 
   Future<void> close() async {
     _log.fine(
-        () => 'starting close of $debugName for ${_errController.debugName}');
+        () => 'starting close of $debugName for ${_outController.debugName}');
+
+    /// close will never complete if there are no listeners.
     if (_outController.hasListener) {
       await _outController.close();
     }
-    _log.fine(() => 'closed out of $debugName');
+    _log
+      ..fine(() => 'closed out of $debugName')
+      ..fine(
+          () => 'starting close of $debugName for ${_errController.debugName}');
 
     /// close will never complete if there are no listeners.
     if (_errController.hasListener) {
