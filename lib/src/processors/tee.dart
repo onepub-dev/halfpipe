@@ -20,7 +20,7 @@ class Tee<T> extends Processor<T, T> {
   final _done = CompleterEx<void>(debugName: 'Tee');
 
   @override
-  Future<void> get waitUntilComplete => _done.future;
+  Future<void> get waitUntilOutputDone => _done.future;
 
   @override
   Future<void> start(

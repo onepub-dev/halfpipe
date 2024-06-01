@@ -14,7 +14,7 @@ class Transform<I, O> extends Transformer<I, O> {
   final _done = CompleterEx<void>(debugName: 'Transform');
 
   @override
-  Future<void> get waitUntilComplete => _done.future;
+  Future<void> get waitUntilOutputDone => _done.future;
 
   @override
   Future<void> start(

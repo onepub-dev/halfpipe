@@ -19,7 +19,7 @@ class BlockPipeSection<I, O> extends PipeSection<I, O> {
   final _done = CompleterEx<void>(debugName: 'BlockSection');
 
   @override
-  Future<void> get waitUntilComplete => _done.future;
+  Future<void> get waitUntilOutputDone => _done.future;
 
   @override
   Future<void> start(StreamControllerEx<dynamic> srcIn,

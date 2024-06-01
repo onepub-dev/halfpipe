@@ -22,7 +22,7 @@ class CapturePipeSection<I, O> extends PipeSection<I, O> {
   final _done = CompleterEx<void>(debugName: 'CaptureSection');
 
   @override
-  Future<void> get waitUntilComplete => _done.future;
+  Future<void> get waitUntilOutputDone => _done.future;
 
   @override
   Future<void> start(

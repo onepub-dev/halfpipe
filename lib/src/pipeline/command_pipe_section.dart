@@ -74,7 +74,7 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>>
   final _done = CompleterEx<void>(debugName: 'CommandPipe: done');
 
   @override
-  Future<void> get waitUntilComplete => _done.future;
+  Future<void> get waitUntilOutputDone => _done.future;
 
   @override
   Future<void> start(

@@ -22,7 +22,7 @@ abstract class PipeSection<I, O> with PipeSectionMixin<O> {
   // /// processing data from its input streams;
   // CompleterEx<void> get done;
 
-  Future<void> get waitUntilComplete;
+  Future<void> get waitUntilOutputDone;
 
   /// Called when the pipeline is shutting down to give each
   /// section a chance to free any resources.

@@ -325,8 +325,6 @@ class PipePhase<T> {
           StreamControllerEx<List<int>>(
               debugName: 'dummy stdin - error channel');
 
-      // final sectionCompleters = <CompleterEx<void>>[];
-
       // start each section running
       for (final section in sections) {
         section.start(
@@ -346,10 +344,9 @@ class PipePhase<T> {
           .listen((data) => sinkErrController.add(data as T));
 
       /// Wait for all sections to complete.
-      for (var i = 0; i < sections.length; i++) {
-        final section = sections[i];
+      for (final section in sections) {
         log.fine(() => 'waiting for section: ${section.debugName} to complete');
-        await section.waitUntilComplete;
+        await section.waitUntilOutputDone;
         log.fine(() => 'closing section ${section.debugName}');
         await section.close();
       }
