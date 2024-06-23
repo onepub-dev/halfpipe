@@ -15,9 +15,11 @@ Future<void> withStdin(
       StreamControllerEx<List<int>>(debugName: debugName ?? 'wrapped stdin');
 
   wrapper.stdinControllers.add(controller);
-  await callback(controller);
-
-  wrapper.stdinControllers.remove(controller);
+  try {
+    await callback(controller);
+  } finally {
+    wrapper.stdinControllers.remove(controller);
+  }
 }
 
 /// Stdin can only be listened to once but we allow users to create

@@ -1,17 +1,13 @@
 import 'package:dcli_core/dcli_core.dart';
 import 'package:halfpipe/halfpipe.dart';
 import 'package:halfpipe/src/processors/directory_list.dart';
-import 'package:logging/logging.dart';
 import 'package:path/path.dart' hide equals;
 import 'package:test/test.dart';
 
+import '../logging.dart';
+
 void main() {
-  setUp(() {
-    Logger.root.level = Level.FINE; // defaults to Level.INFO
-    Logger.root.onRecord.listen((record) {
-      print('${record.level.name}: ${record.time}: ${record.message}');
-    });
-  });
+  setUp(enableFineLogging);
 
   // So the problem is that we create a stream and then give it to some
   // foreign code - such as a block - and allow them to listen to the stream.
@@ -23,7 +19,7 @@ void main() {
   // once the have finished writing data and once the input streams are empty.
   // Maybe we don't need them to tell us when the have finished writing as
   // we only care about when their output streams are empty, and the next
-  // phase is responsible for that. 
+  // phase is responsible for that.
   // What happens if the stream is never written to, what triggers the onDone.
   // onDone is called when the stream is empty and has been closed.
   // so w

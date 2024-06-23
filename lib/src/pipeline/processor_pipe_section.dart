@@ -27,6 +27,7 @@ class ProcessorPipeSection<I, O> extends PipeSection<I, O> {
   @override
   Future<void> close() async {
     _log.fine(() =>
+        // ignore: lines_longer_than_80_chars
         'starting close of $debugName for ${processor.outController.debugName}');
 
     /// close will never complete if there are no listeners.

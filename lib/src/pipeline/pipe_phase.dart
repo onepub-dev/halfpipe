@@ -310,11 +310,11 @@ class PipePhase<T> {
   // Wire up the [PipeSection]s by attaching their streams
   // and then run the pipeline.
   Future<int> _run() async {
+    Object? firstException;
+    StackTrace? firstStackTrace;
+
     await withStdin(debugName: 'stdin of main process',
         (stdinController) async {
-      // final sub = stdinController.stream
-      //     .listen((data) => stdinController.sink.add(data));
-
       /// Wire the process's stdin as the first
       /// section's input
       StreamControllerEx<dynamic> priorOutController = stdinController;
@@ -346,16 +346,28 @@ class PipePhase<T> {
       /// Wait for all sections to complete.
       for (final section in sections) {
         log.fine(() => 'waiting for section: ${section.debugName} to complete');
-        await section.waitUntilOutputDone;
+
+        try {
+          if (firstException == null) {
+            /// As soon as one section throws we stop waiting on
+            /// subsequent sections as need to shut down the
+            /// pipeline and clean up.
+            await section.waitUntilOutputDone;
+          }
+          // ignore: avoid_catches_without_on_clauses
+        } catch (e, st) {
+          firstException = e;
+          firstStackTrace = st;
+        }
         log.fine(() => 'closing section ${section.debugName}');
         await section.close();
       }
 
       /// A controller will not close if it has any listeners
-          /// or it has never been listened to.
-          if (stdinController.hasListener) {
-            await stdinController.close();
-          }
+      /// or it has never been listened to.
+      if (stdinController.hasListener) {
+        await stdinController.close();
+      }
       if (sinkOutController.hasListener) {
         await sinkOutController.close();
       }
@@ -364,6 +376,12 @@ class PipePhase<T> {
         await sinkErrController.close();
       }
     });
+
+    /// A section threw, so now we have shutdown the pipeline
+    /// lets re-throw it.
+    if (firstException != null) {
+      Error.throwWithStackTrace(firstException!, firstStackTrace!);
+    }
 
     var exitCode = 0;
     for (final section in sections) {

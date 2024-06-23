@@ -1,12 +1,15 @@
 name: halfpipe
-description: A starting point for Dart libraries or applications.
-version: 1.0.0
+description: |-
+  Create processing pipe lines by combining calls to external command
+  line apps and dart code
+version: 0.0.1
+repository: https://github.com/onepub-dev/halfpipe
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
 
 
-dependencies: 
+dependencies:
   args: ^2.5.0
   async: ^2.11.0
   completer_ex: ^4.0.2

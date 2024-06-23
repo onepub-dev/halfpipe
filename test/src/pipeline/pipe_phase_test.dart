@@ -4,6 +4,7 @@ import 'package:halfpipe/halfpipe.dart';
 import 'package:path/path.dart' hide equals;
 import 'package:test/test.dart';
 
+import '../logging.dart';
 import '../test_app.dart';
 
 void main() {
@@ -27,10 +28,11 @@ void main() {
   });
 
   test('stderr stream ...', () async {
+    enableFineLogging();
     await withTempDirAsync((dir) async {
       final output = await HalfPipe()
           .command('$pathToTestApp -e 10')
-          .transform(Transform.line)
+          // .transform(Transform.line)
           .stderr
           .toList();
 
