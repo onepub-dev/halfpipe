@@ -2,7 +2,7 @@ name: halfpipe
 description: |-
   Create processing pipe lines by combining calls to external command
   line apps and dart code
-version: 0.0.1
+version: 0.0.2
 repository: https://github.com/onepub-dev/halfpipe
 
 environment:

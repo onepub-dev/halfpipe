@@ -1,3 +1,6 @@
+# 0.0.2
+- Upgraded to lastet version of dcli.
+
 # 0.0.1
 - Create LICENSE
 - all tests now working.
