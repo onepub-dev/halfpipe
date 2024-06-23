@@ -2,3 +2,4 @@
 /.dart_tool
 /.history
 /.packages
+.failed_tracker
