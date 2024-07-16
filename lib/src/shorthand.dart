@@ -12,7 +12,7 @@ typedef CancelableLineAction = bool Function(String line);
 
 void _noOpAction(String line) {}
 
-extension StringAsProcess on String {
+extension StringAsPipeline on String {
   /// run
   Future<void> get run async {
     await HalfPipe().commandAndArgs(this).print();
@@ -46,7 +46,7 @@ extension StringAsProcess on String {
     bool nothrow = false,
     bool extensionSearch = true,
   }) async {
-    final pipe = HalfPipe()
+    await HalfPipe()
         .commandAndArgs(this,
             workingDirectory: workingDirectory,
             runInShell: runInShell,
@@ -54,14 +54,11 @@ extension StringAsProcess on String {
             terminal: terminal,
             nothrow: nothrow,
             extensionSearch: extensionSearch)
+        .transform(Transform.line)
         .block((srcIn, srcErr, sinkOut, sinkErr) async {
-      srcIn.listen(print);
-      srcErr.listen(printerr);
-    });
-    pipe.stdout.listen(print);
-    pipe.stderr.listen(printerr);
-
-    await pipe.print();
+      srcIn.listen((line) => stdout(line));
+      srcErr.listen((line) => stderr(line));
+    }).captureNone();
   }
 
   Future<List<String>> toList(
@@ -74,9 +71,7 @@ extension StringAsProcess on String {
     bool nothrow = false,
     bool extensionSearch = true,
   }) async {
-    final lines = <String>[];
-
-    final pipe = HalfPipe()
+    final capture = HalfPipe()
         .commandAndArgs(commandAndArgs,
             runInShell: runInShell,
             detached: detached,
@@ -84,9 +79,10 @@ extension StringAsProcess on String {
             nothrow: nothrow,
             workingDirectory: workingDirectory,
             extensionSearch: extensionSearch)
-        .transform(Transform.line);
+        .transform(Transform.line)
+        .captureMixed();
 
-    (await pipe.stdmix).listen(lines.add);
+    final lines = (await capture).mixed;
 
     return lines.sublist(skipLines);
   }

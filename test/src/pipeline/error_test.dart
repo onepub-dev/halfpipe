@@ -1,5 +1,6 @@
 import 'package:dcli_core/dcli_core.dart';
 import 'package:halfpipe/halfpipe.dart';
+import 'package:halfpipe/src/command_exception.dart';
 import 'package:test/test.dart';
 
 import '../logging.dart';
@@ -17,9 +18,8 @@ void main() {
         await HalfPipe()
             .command('/invalid/path -e 10')
             .transform(Transform.line)
-            .stderr
-            .toList();
-      } on RunException catch (e, _) {
+            .captureErr();
+      } on CommandException catch (e, _) {
         /// good we should end up here.
         threw = true;
       }

@@ -1,6 +1,5 @@
 // ignore_for_file: avoid_returning_this, strict_raw_type
 
-import 'dart:async';
 import 'dart:convert';
 import 'dart:core' as core;
 import 'dart:core';
@@ -77,6 +76,16 @@ class PipePhase<T> {
 
   /// Defines a block of dart code that can is called as
   /// part of the pipeline.
+  /// ```dart
+  ///  await HalfPipe()
+  ///      .processor(DirectoryList('*.*', workingDirectory: rootPath))
+  ///      .block<String>((srcIn, srcErr, stdout, stderr) async {
+  ///    await for (final line in srcIn) {
+  ///      print('Found: $line');
+  ///    }
+  ///  }).exitCode();
+  /// ```
+
   PipePhase<O> block<O>(Block<T, O> callback) {
     sections.add(BlockPipeSection<T, O>(callback));
 
@@ -350,7 +359,7 @@ class PipePhase<T> {
         try {
           if (firstException == null) {
             /// As soon as one section throws we stop waiting on
-            /// subsequent sections as need to shut down the
+            /// subsequent sections as we need to shut down the
             /// pipeline and clean up.
             await section.waitUntilOutputDone;
           }
@@ -362,6 +371,8 @@ class PipePhase<T> {
         log.fine(() => 'closing section ${section.debugName}');
         await section.close();
       }
+
+      await Future.delayed(Duration.zero, () {});
 
       /// A controller will not close if it has any listeners
       /// or it has never been listened to.
@@ -398,17 +409,19 @@ class PipePhase<T> {
     return out;
   }
 
-  core.Stream<T> get stdout {
-    unawaited(_run());
-    return sinkOutController.stream;
-  }
+  // core.Future<core.int> run() async => _run();
 
-  core.Stream<T> get stderr {
-    unawaited(_run());
-    return sinkErrController.stream;
-  }
+  // Stream<T> get stdout => sinkOutController.stream;
 
-  Future<Stream<T>> get stdmix async => mixStreams(stdout, stderr);
+  /// This is a Terminal method which causes the pipeline to run
+  ///
+  /// Delivers a stream of errors reported by sections of the
+  /// pipeline. If you have [CommandPipeSection]s then you
+  /// must call them with nothrow:true otherwise the first
+  /// error will shut the pipeline down.
+  // Stream<T> get stderr => sinkErrController.stream;
+
+  // Future<Stream<T>> get stdmix async => mixStreams(stdout, stderr);
 
 // Function to mix two streams
   Future<Stream<S>> mixStreams<S>(Stream<S> stream1, Stream<S> stream2) async {
