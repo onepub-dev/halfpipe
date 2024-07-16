@@ -13,7 +13,7 @@ dependencies:
   args: ^2.5.0
   async: ^2.11.0
   completer_ex: ^4.0.2
-  dcli: ^4.0.0
+  dcli: ^4.0.5
   dcli_common: ^4.0.0
   dcli_core: ^4.0.7
   file: ^7.0.0
