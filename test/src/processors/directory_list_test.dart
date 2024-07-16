@@ -45,4 +45,14 @@ void main() {
       expect(capture.out, contains(test3));
     });
   });
+  test('async listing', () async {
+    await HalfPipe()
+        .processor(DirectoryList('*.*', workingDirectory: pwd))
+        .block<String>((srcIn, srcErr, stdout, stderr) async {
+      await for (final line in srcIn) {
+        print('Found: $line');
+      }
+    }).exitCode();
+    print('completed');
+  });
 }

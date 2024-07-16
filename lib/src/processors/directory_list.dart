@@ -19,8 +19,6 @@ enum FileEntityTypes { file, directory, link }
 /// Note that the error stream will not pass through this
 /// processor.
 ///P
-// TODO(bsutton): change this so that the start method runs asynchrously.
-///
 class DirectoryList<I> extends Processor<I, String> {
   DirectoryList(this.pattern,
       {this.workingDirectory = '.',
@@ -46,16 +44,14 @@ class DirectoryList<I> extends Processor<I, String> {
     StreamControllerEx<I> srcErr,
   ) async {
     try {
-      find(pattern,
+      await for (final file in findAsync(pattern,
           workingDirectory: workingDirectory,
           recursive: recursive,
           caseSensitive: caseSensitive,
           includeHidden: includeHidden,
-          types: types.map(_map).toList(), progress: (entity) {
-        outController.sink.add(entity.pathTo);
-        return true;
-      });
-
+          types: types.map(_map).toList())) {
+        outController.sink.add(file.pathTo);
+      }
       _done.complete();
     }
     // ignore: avoid_catches_without_on_clauses

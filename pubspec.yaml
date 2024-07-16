@@ -15,7 +15,7 @@ dependencies:
   completer_ex: ^4.0.2
   dcli: ^4.0.0
   dcli_common: ^4.0.0
-  dcli_core: ^4.0.0
+  dcli_core: ^4.0.7
   file: ^7.0.0
   glob: ^2.1.2
   logging: ^1.2.0
