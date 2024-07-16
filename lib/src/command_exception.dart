@@ -9,9 +9,9 @@ import 'package:stack_trace/stack_trace.dart';
 
 /// Thrown when any of the process related method
 /// such as .run and .start fail.
-class RunException extends DCliException {
+class CommandException extends DCliException {
   ///
-  RunException(
+  CommandException(
     this.cmdLine,
     this.exitCode,
     this.reason, {
@@ -19,7 +19,7 @@ class RunException extends DCliException {
   }) : super(reason, stackTrace);
 
   ///
-  RunException.withArgs(
+  CommandException.withArgs(
     String? cmd,
     List<String?> args,
     this.exitCode,

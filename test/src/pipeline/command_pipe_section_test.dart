@@ -1,6 +1,6 @@
 import 'package:dcli_core/dcli_core.dart' hide RunException;
 import 'package:halfpipe/halfpipe.dart';
-import 'package:halfpipe/src/run_exception.dart';
+import 'package:halfpipe/src/command_exception.dart';
 import 'package:test/test.dart';
 
 import '../test_app.dart';
@@ -29,7 +29,7 @@ void main() {
         await HalfPipe()
             .command(commandLine, workingDirectory: tempDir)
             .exitCode();
-      } on RunException catch (e) {
+      } on CommandException catch (e) {
         expect(e.exitCode, equals(1));
         expect(e.cmdLine, equals(commandLine));
         expect(

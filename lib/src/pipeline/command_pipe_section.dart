@@ -5,7 +5,7 @@ import 'dart:async';
 import 'package:completer_ex/completer_ex.dart';
 import 'package:logging/logging.dart';
 
-import '../run_exception.dart';
+import '../command_exception.dart';
 import '../run_process.dart';
 import '../util/stream_controller_ex.dart';
 import 'pipe_section.dart';
@@ -100,6 +100,9 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>>
         _stdoutFlushed.complete();
       });
 
+      /// Listen the error stream until it is done
+      /// so we can wait for the stream to be flushed before
+      /// we fully shutdown.
       final _stderrFlushed =
           CompleterEx<void>(debugName: 'CommandSection - stderr');
       runProcess.stderr.listen(errController.add).onDone(() async {
@@ -117,10 +120,10 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>>
           _done.complete();
         } else {
           if (_startType == _StartType.runWithArgs) {
-            _done.completeError(RunException.withArgs(_command, _args ?? [],
+            _done.completeError(CommandException.withArgs(_command, _args ?? [],
                 exitCode, 'The command exited with a non-zero exit code.'));
           } else {
-            _done.completeError(RunException(_commandLine!, exitCode,
+            _done.completeError(CommandException(_commandLine!, exitCode,
                 'The command exited with a non-zero exit code.'));
           }
         }

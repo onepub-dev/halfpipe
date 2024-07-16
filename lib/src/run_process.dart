@@ -3,9 +3,9 @@ import 'dart:io';
 
 import 'package:dcli_core/dcli_core.dart' hide RunException;
 
+import 'command_exception.dart';
 import 'parse_cli_command.dart';
 import 'process_helper.dart';
-import 'run_exception.dart';
 
 enum ArgMethod { command, commandAndArgs, commandAndList }
 
@@ -114,7 +114,7 @@ class RunProcess {
 
     if (!exists(workingDirectory)) {
       final cmdLine = "${_parsed.cmd} ${_parsed.args.join(' ')}";
-      throw RunException(
+      throw CommandException(
         cmdLine,
         -1,
         'The specified workingDirectory [$workingDirectory] does not exist.',
@@ -131,7 +131,7 @@ class RunProcess {
       );
     } on ProcessException catch (ep, _) {
       if (Platform.isWindows && ep.errorCode == 193) {
-        throw RunException.withArgs(
+        throw CommandException.withArgs(
           ep.executable,
           ep.arguments,
           ep.errorCode,
@@ -139,7 +139,7 @@ class RunProcess {
         );
       }
       if (ep.errorCode == 2) {
-        throw RunException.withArgs(
+        throw CommandException.withArgs(
           ep.executable,
           ep.arguments,
           ep.errorCode,

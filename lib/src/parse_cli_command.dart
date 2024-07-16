@@ -6,8 +6,8 @@
 
 import 'package:dcli_core/dcli_core.dart' hide RunException;
 
+import 'command_exception.dart';
 import 'qarg.dart';
-import 'run_exception.dart';
 
 /// Class to parse a OS command, contained in a string, which we need to pass
 /// into the dart Process.start method as a application name and a series
@@ -17,7 +17,7 @@ class ParsedCliCommand {
   ParsedCliCommand(String command, String? workingDirectory) {
     workingDirectory ??= pwd;
     if (!exists(workingDirectory)) {
-      throw RunException(
+      throw CommandException(
         command,
         -1,
         "The workingDirectory ${truepath(workingDirectory)} doesn't exists.",
@@ -36,7 +36,7 @@ class ParsedCliCommand {
   ) {
     workingDirectory ??= pwd;
     if (!exists(workingDirectory)) {
-      throw RunException(
+      throw CommandException(
         '$cmd ${rawArgs.join(' ')}',
         -1,
         "The workingDirectory ${truepath(workingDirectory)} doesn't exists.",
@@ -251,7 +251,7 @@ class ParsedCliCommand {
     }
 
     if (parts.isEmpty) {
-      throw RunException(
+      throw CommandException(
           commandLine, -1, 'The string did not contain a command.');
     }
     cmd = parts[0].arg;
