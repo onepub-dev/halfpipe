@@ -1,7 +1,5 @@
 import 'dart:convert';
 
-/// Combines a utf8.decoder and a LineSplitter into
-/// a single Converter.
 class Utf8LineSplitter extends Converter<List<int>, String> {
   final Utf8Decoder _utf8Decoder = const Utf8Decoder();
   final LineSplitter _lineSplitter = const LineSplitter();
@@ -10,7 +8,7 @@ class Utf8LineSplitter extends Converter<List<int>, String> {
   String convert(List<int> input) {
     final decodedString = _utf8Decoder.convert(input);
     final lines = _lineSplitter.convert(decodedString);
-    return lines.first;
+    return lines.isNotEmpty ? lines.first : '';
   }
 
   @override
@@ -25,17 +23,24 @@ class _Utf8LineSplitterSink implements Sink<List<int>> {
   final Utf8Decoder _utf8Decoder;
   final LineSplitter _lineSplitter;
 
+  String _carry = '';
+
   @override
   void add(List<int> chunk) {
-    final decodedString = _utf8Decoder.convert(chunk);
+    final decodedString = _carry + _utf8Decoder.convert(chunk);
     final lines = _lineSplitter.convert(decodedString);
-    for (final line in lines) {
-      _outputSink.add(line);
+    for (var i = 0; i < lines.length - 1; i++) {
+      _outputSink.add(lines[i]);
     }
+    _carry = lines.isNotEmpty ? lines.last : '';
   }
 
   @override
   void close() {
+    if (_carry.isNotEmpty) {
+      _outputSink.add(_carry);
+      _carry = '';
+    }
     _outputSink.close();
   }
 }
