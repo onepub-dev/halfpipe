@@ -76,22 +76,36 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>>
   @override
   Future<void> get waitUntilOutputDone => _done.future;
 
+  late final StreamControllerEx<dynamic> srcIn;
+  late final StreamControllerEx<dynamic> srcErr;
+
+  final _stdoutFlushed =
+      CompleterEx<void>(debugName: 'CommandSection - stdout');
+  final _stderrFlushed =
+      CompleterEx<void>(debugName: 'CommandSection - stderr');
+
   @override
-  Future<void> start(
+  Future<void> wire(
     StreamControllerEx<dynamic> srcIn,
     StreamControllerEx<dynamic> srcErr,
   ) async {
+    this.srcIn = srcIn;
+    this.srcErr = srcErr;
+
     /// Feed data from the prior [PipeSection] into
     /// our running process.
     srcIn.stream.listen((line) => runProcess.stdin.write(line));
     srcErr.stream.listen((line) => runProcess.stdin.write(line));
+
+    //
+  }
+
+  @override
+  Future<void> start() async {
     try {
       await runProcess.start();
 
-      final _stdoutFlushed =
-          CompleterEx<void>(debugName: 'CommandSection - stdout');
-
-      /// Feed data from our running process to the next [PipeSection].
+      // Feed data from our running process to the next [PipeSection].
       runProcess.stdout.listen((data) {
         _log.fine(() => 'process: sending data: ${data.length}');
         outController.sink.add(data);
@@ -103,8 +117,6 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>>
       /// Listen the error stream until it is done
       /// so we can wait for the stream to be flushed before
       /// we fully shutdown.
-      final _stderrFlushed =
-          CompleterEx<void>(debugName: 'CommandSection - stderr');
       runProcess.stderr.listen(errController.add).onDone(() async {
         _stderrFlushed.complete();
       });
@@ -128,6 +140,7 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>>
           }
         }
       }));
+
       // ignore: avoid_catches_without_on_clauses
     } catch (e) {
       _done.completeError(e);

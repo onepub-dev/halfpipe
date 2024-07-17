@@ -11,7 +11,9 @@ import 'pipe_section.dart';
 class ProcessorPipeSection<I, O> extends PipeSection<I, O> {
   ProcessorPipeSection(this.processor);
 
-  Processor<I, O> processor;
+  final Processor<I, O> processor;
+  late final StreamControllerEx<I> srcIn;
+  late final StreamControllerEx<I> srcErr;
 
   final _log = Logger((ProcessorPipeSection).toString());
 
@@ -19,9 +21,16 @@ class ProcessorPipeSection<I, O> extends PipeSection<I, O> {
   Future<void> get waitUntilOutputDone => processor.waitUntilOutputDone;
 
   @override
-  Future<void> start(
+  Future<void> wire(
       StreamControllerEx<I> srcIn, StreamControllerEx<I> srcErr) async {
-    processor.start(srcIn, srcErr);
+    this.srcIn = srcIn;
+    this.srcErr = srcErr;
+    processor.wire(srcIn, srcErr);
+  }
+
+  @override
+  Future<void> start() async {
+    processor.start();
   }
 
   @override

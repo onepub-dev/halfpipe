@@ -12,13 +12,17 @@ class Transform<I, O> extends Transformer<I, O> {
   Converter<I, O> converter;
 
   final _done = CompleterEx<void>(debugName: 'Transform');
+  late final StreamControllerEx<I> srcIn;
+  late final StreamControllerEx<I> srcErr;
 
   @override
   Future<void> get waitUntilOutputDone => _done.future;
 
   @override
-  Future<void> start(
+  Future<void> wire(
       StreamControllerEx<I> srcIn, StreamControllerEx<I> srcErr) async {
+    this.srcIn = srcIn;
+    this.srcErr = srcErr;
     srcIn.stream.transform(converter).listen((event) {
       outController.sink.add(event);
     }, onDone: () async {
@@ -28,6 +32,9 @@ class Transform<I, O> extends Transformer<I, O> {
       }
     }, onError: _done.completeError);
   }
+
+  @override
+  Future<void> start() async {}
 
   static Utf8LineSplitter get line => Utf8LineSplitter();
 

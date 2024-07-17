@@ -22,7 +22,7 @@ class BlockPipeSection<I, O> extends PipeSection<I, O> {
   Future<void> get waitUntilOutputDone => _done.future;
 
   @override
-  Future<void> start(StreamControllerEx<dynamic> srcIn,
+  Future<void> wire(StreamControllerEx<dynamic> srcIn,
       StreamControllerEx<dynamic> srcErr) async {
     // ignore: unawaited_futures
     action(srcIn.stream.cast<I>(), srcErr.stream.cast<I>(), outController.sink,
@@ -35,4 +35,9 @@ class BlockPipeSection<I, O> extends PipeSection<I, O> {
 
   @override
   String get debugName => 'block';
+
+  @override
+  void start() {
+    // No Op.
+  }
 }

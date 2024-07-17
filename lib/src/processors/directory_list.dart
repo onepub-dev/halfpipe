@@ -35,14 +35,21 @@ class DirectoryList<I> extends Processor<I, String> {
 
   late final _done = CompleterEx<void>(debugName: 'DirectoryList');
 
+  late final StreamControllerEx<I> srcIn;
+  late final StreamControllerEx<I> srcErr;
+
   @override
   Future<void> get waitUntilOutputDone => _done.future;
 
   @override
-  Future<void> start(
-    StreamControllerEx<I> srcIn,
-    StreamControllerEx<I> srcErr,
-  ) async {
+  Future<void> wire(
+      StreamControllerEx<I> srcIn, StreamControllerEx<I> srcErr) async {
+    this.srcIn = srcIn;
+    this.srcErr = srcErr;
+  }
+
+  @override
+  Future<void> start() async {
     try {
       await for (final file in findAsync(pattern,
           workingDirectory: workingDirectory,

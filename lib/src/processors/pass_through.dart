@@ -11,10 +11,18 @@ class PassThrough<I> extends Processor<I, I> {
   @override
   Future<void> get waitUntilOutputDone => _done.future;
 
+  late final StreamControllerEx<I> srcIn;
+  late final StreamControllerEx<I> srcErr;
+
+  final inCompleter = CompleterEx<void>(debugName: 'PassThrough: In');
+  final errCompleter = CompleterEx<void>(debugName: 'PassThrough: Err');
+
   @override
-  Future<void> start(
+  Future<void> wire(
       StreamControllerEx<I> srcIn, StreamControllerEx<I> srcErr) async {
-    final inCompleter = CompleterEx<void>(debugName: 'PassThrough: In');
+    this.srcIn = srcIn;
+    this.srcErr = srcErr;
+
     srcIn.stream.listen((line) {
       outController.sink.add(line);
     })
@@ -26,7 +34,6 @@ class PassThrough<I> extends Processor<I, I> {
       })
       ..onError(inCompleter.completeError);
 
-    final errCompleter = CompleterEx<void>(debugName: 'PassThrough: Err');
     srcErr.stream.listen((data) {
       errController.sink.add(data);
     })
@@ -37,7 +44,10 @@ class PassThrough<I> extends Processor<I, I> {
         }
       })
       ..onError(errCompleter.completeError);
+  }
 
+  @override
+  Future<void> start() async {
     unawaited(Future.wait([inCompleter.future, errCompleter.future])
         .then((_) => _done.complete));
   }

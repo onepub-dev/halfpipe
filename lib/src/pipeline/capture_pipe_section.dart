@@ -25,7 +25,7 @@ class CapturePipeSection<I, O> extends PipeSection<I, O> {
   Future<void> get waitUntilOutputDone => _done.future;
 
   @override
-  Future<void> start(
+  Future<void> wire(
     StreamControllerEx<I> srcIn,
     StreamControllerEx<I> srcErr,
   ) async {
@@ -43,4 +43,9 @@ class CapturePipeSection<I, O> extends PipeSection<I, O> {
 
   @override
   String get debugName => 'capture';
+
+  @override
+  void start() {
+    // TODO: implement start
+  }
 }

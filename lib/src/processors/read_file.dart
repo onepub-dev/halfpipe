@@ -18,14 +18,24 @@ class ReadFile extends Processor<List<int>, List<int>> {
   @override
   Future<void> get waitUntilOutputDone => _done.future;
 
+  late StreamControllerEx<List<int>> srcIn;
+  late StreamControllerEx<List<int>> srcErr;
+
   @override
-  Future<void> start(
+  Future<void> wire(
     StreamControllerEx<List<int>> srcIn,
     StreamControllerEx<List<int>> srcErr,
   ) async {
-    try {
-      srcErr.stream.listen(errController.sink.add);
+    this.srcIn = srcIn;
+    this.srcErr = srcErr;
+    srcErr.stream.listen(errController.sink.add);
+  }
 
+  @override
+  Future<void> start(
+  ) async {
+    try {
+      log.fine('File size: ${File(pathToFile).lengthSync()}');
       // Read the file as a list of strings
       final fileStream = File(pathToFile).openRead();
       log.fine(() => 'opened $pathToFile');
@@ -34,6 +44,7 @@ class ReadFile extends Processor<List<int>, List<int>> {
 
       /// write the contents of the file into the stream.
       sub = fileStream.listen((event) {
+        log.fine('writing: ${event.length} bytes');
         outController.sink.add(event);
       })
         ..onDone(() {

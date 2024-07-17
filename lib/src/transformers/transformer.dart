@@ -1,6 +1,5 @@
 import '../pipeline/pipe_section.dart';
 import '../processors/processor.dart';
-import '../util/stream_controller_ex.dart';
 
 /// A Transformer is a type of [PipeSection] that can transform
 /// data. Any transformation is allowed including injecting additional
@@ -12,10 +11,4 @@ import '../util/stream_controller_ex.dart';
 /// If the data type between src and sink isn't changing then use a [Processor].
 /// HalfPipe ships with a number of standard Transformers but you
 /// can write additional [Transformer]s.
-abstract class Transformer<I, O> extends PipeSection<I, O> {
-  @override
-  void start(
-    StreamControllerEx<I> srcIn,
-    StreamControllerEx<I> srcErr,
-  );
-}
+abstract class Transformer<I, O> extends PipeSection<I, O> {}

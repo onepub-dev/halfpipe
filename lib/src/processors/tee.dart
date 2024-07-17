@@ -18,14 +18,20 @@ class Tee<T> extends Processor<T, T> {
   PipePhase<T> other;
 
   final _done = CompleterEx<void>(debugName: 'Tee');
+  late final StreamControllerEx<T> srcIn;
+  late final StreamControllerEx<T> srcErr;
+
+  final inCompleter = CompleterEx<void>(debugName: 'Tee:in');
+  final errCompleter = CompleterEx<void>(debugName: 'Tee:err');
 
   @override
   Future<void> get waitUntilOutputDone => _done.future;
 
   @override
-  Future<void> start(
+  Future<void> wire(
       StreamControllerEx<T> srcIn, StreamControllerEx<T> srcErr) async {
-    final inCompleter = CompleterEx<void>(debugName: 'Tee:in');
+    this.srcIn = srcIn;
+    this.srcErr = srcErr;
     srcIn.stream.listen((data) {
       outController.sink.add(data);
       injector.outController.add(data);
@@ -38,7 +44,6 @@ class Tee<T> extends Processor<T, T> {
       })
       ..onError(inCompleter.completeError);
 
-    final errCompleter = CompleterEx<void>(debugName: 'Tee:err');
     srcErr.stream.listen((line) {
       errController.sink.add(line);
       injector.errController.add(line);
@@ -50,7 +55,10 @@ class Tee<T> extends Processor<T, T> {
         }
       })
       ..onError(errCompleter.completeError);
+  }
 
+  @override
+  Future<void> start() async {
     unawaited(Future.wait([inCompleter.future, errCompleter.future])
         .then((_) => _done.complete()));
   }

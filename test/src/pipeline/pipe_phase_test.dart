@@ -1,7 +1,6 @@
 import 'package:dcli/dcli.dart' as dcli;
 import 'package:dcli_core/dcli_core.dart' as core;
 import 'package:halfpipe/halfpipe.dart';
-import 'package:logging/logging.dart';
 import 'package:path/path.dart' hide equals;
 import 'package:test/test.dart';
 
@@ -9,7 +8,6 @@ import '../logging.dart';
 import '../test_app.dart';
 
 void main() {
-  final _log = Logger('PipePhaseTest');
   test('stdout stream ...', () async {
     await core.withTempDirAsync((dir) async {
       final pathToFile = join(dir, 'test.txt');

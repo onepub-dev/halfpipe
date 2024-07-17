@@ -334,9 +334,9 @@ class PipePhase<T> {
           StreamControllerEx<List<int>>(
               debugName: 'dummy stdin - error channel');
 
-      // start each section running
+      // wire each section running
       for (final section in sections) {
-        section.start(
+        section.wire(
           priorOutController,
           priorErrController,
         );
@@ -351,6 +351,11 @@ class PipePhase<T> {
           .listen((data) => sinkOutController.add(data as T));
       priorErrController.stream
           .listen((data) => sinkErrController.add(data as T));
+
+      // start each section running
+      for (final section in sections) {
+        section.start();
+      }
 
       /// Wait for all sections to complete.
       for (final section in sections) {
@@ -368,7 +373,7 @@ class PipePhase<T> {
           firstException = e;
           firstStackTrace = st;
         }
-        log.fine(() => 'closing section ${section.debugName}');
+        log.fine(() => 'section ${section.debugName} completed');
         await section.close();
       }
 

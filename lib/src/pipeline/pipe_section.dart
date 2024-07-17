@@ -9,14 +9,23 @@ import 'pipe_section_mixin.dart';
 
 // ignore: one_member_abstracts
 abstract class PipeSection<I, O> with PipeSectionMixin<O> {
-  /// Runs the defined action passing in data from the previous [PipeSection]
-  /// and passing data out to the next [PipeSection].
+  /// Called by the pipe line to give each section a chance
+  /// to wire up any listeners before any data is pumped through
+  /// the pipeline.
+  /// This [PipeSection] must NOT send any data until [start] is called.
   /// [srcIn] is a stream from the prior [PipeSection] equivalent stdout.
   /// [srcErr] is a stream from the prior [PipeSection] equivalent to stderr.
-  /// A [CompleterEx] is returned that completes when this [PipeSection]
-  /// has completed
-  /// generating/processing the [srcIn] and [srcErr] streams.
-  void start(StreamControllerEx<I> srcIn, StreamControllerEx<I> srcErr);
+  void wire(
+    StreamControllerEx<I> srcIn,
+    StreamControllerEx<I> srcErr,
+  );
+
+  /// After calling [wire], this method is called to start this section.
+  /// If this [PipeSection] only transforms data then the [start]
+  /// method doesn't need to do anything.
+  /// If this [PipeSection] is generates data then it should start doing
+  /// so when [start] is called.
+  void start();
 
   // /// The [done] completer 'completes' when this section has finished
   // /// processing data from its input streams;

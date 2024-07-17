@@ -14,10 +14,14 @@ class TransformerPipeSection<I, O> extends PipeSection<I, O> {
 
   final _log = Logger((TransformerPipeSection).toString());
 
-  Converter<I, O> transformer;
+  final Converter<I, O> transformer;
 
-  Sink<I>? inputConversionSinkForOut;
-  Sink<I>? inputConversionSinkForErr;
+  late final Sink<I>? inputConversionSinkForOut;
+  late final Sink<I>? inputConversionSinkForErr;
+
+  final outCompleter = CompleterEx<bool>(debugName: 'TransformerPipe: out');
+  final errCompleter = CompleterEx<bool>(debugName: 'TransformerPipe: err');
+
   // If we wait now then we stop the next stage in the pipeline
   // from running.
   // exitCode = await runProcess.exitCode;
@@ -26,13 +30,16 @@ class TransformerPipeSection<I, O> extends PipeSection<I, O> {
   @override
   Future<void> get waitUntilOutputDone => _done.future;
 
+  late final StreamControllerEx<I> srcIn;
+  late final StreamControllerEx<I> srcErr;
+
   @override
-  Future<void> start(
+  Future<void> wire(
     StreamControllerEx<I> srcIn,
     StreamControllerEx<I> srcErr,
   ) async {
-    final outCompleter = CompleterEx<bool>(debugName: 'TransformerPipe: out');
-    final errCompleter = CompleterEx<bool>(debugName: 'TransformerPipe: err');
+    this.srcIn = srcIn;
+    this.srcErr = srcErr;
 
     inputConversionSinkForOut =
         transformer.startChunkedConversion(outController.sink);
@@ -63,7 +70,10 @@ class TransformerPipeSection<I, O> extends PipeSection<I, O> {
         errCompleter.complete(true);
       }
     }, onError: errCompleter.completeError);
+  }
 
+  @override
+  Future<void> start() async {
     unawaited(Future.wait<bool>([outCompleter.future, errCompleter.future])
         // ignore: prefer_expression_function_bodies
         .then((_) {

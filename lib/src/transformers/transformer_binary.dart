@@ -13,6 +13,9 @@ import '../util/stream_controller_ex.dart';
 /// can write additional [TransformerBinary]s.
 abstract class TransformerBinary extends PipeSection<List<int>, List<int>> {
   @override
-  Future<CompleterEx<void>> start(StreamControllerEx<List<int>> srcIn,
-      StreamControllerEx<List<int>> srcErr);
+  Future<void> wire(StreamControllerEx<List<int>> srcIn,
+      StreamControllerEx<List<int>> srcErr) async {}
+
+  @override
+  Future<CompleterEx<void>> start();
 }

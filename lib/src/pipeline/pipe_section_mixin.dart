@@ -31,7 +31,7 @@ mixin PipeSectionMixin<O> {
     if (_errController.hasListener) {
       await _errController.close();
     }
-    _log.fine(() => 'closed err of $debugName');
+    _log.fine(() => 'closed err of $debugName for ${_outController.debugName}');
   }
 
   String get debugName;
