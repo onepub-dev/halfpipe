@@ -49,7 +49,7 @@ class RunProcess {
       throw StateError('You must first call [RunProcess.start]');
     }
 
-    if (terminal == true) {
+    if (terminal) {
       throw StateError(
           '''When `terminal` is true ther process does not have its own stdout but is directly attached to the terminals stdout''');
     }
@@ -68,7 +68,7 @@ class RunProcess {
       throw StateError('You must first call [RunProcess.start]');
     }
 
-    if (terminal == true) {
+    if (terminal) {
       throw StateError(
           '''When `terminal` is true, the process does not have its own stdin but is directly attached to the terminals stdin''');
     }
@@ -88,7 +88,7 @@ class RunProcess {
 
   Future<void> start() async {
     assert(
-      !(terminal == true && detached == true),
+      !(terminal && detached),
       'You cannot enable terminal and detached at the same time.',
     );
 

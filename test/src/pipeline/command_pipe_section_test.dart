@@ -36,7 +36,7 @@ void main() {
             e.reason, equals('The command exited with a non-zero exit code.'));
         threw = true;
       }
-      if (threw == false) {
+      if (!threw) {
         fail('Expected an exception to be thrown');
       }
     });
