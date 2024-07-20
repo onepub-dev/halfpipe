@@ -9,6 +9,7 @@ import 'package:test/test.dart' hide Skip;
 
 import 'test_app.dart';
 
+final _log = Logger('half_pipe_test');
 void main() {
   setUpAll(() async {
     expect(File(pathToTestApp).existsSync(), true);
@@ -61,13 +62,13 @@ void main() {
           // process the output of ls through a block of dart code
           .block((plumbing) async {
         plumbing.src.listen((line) {
-          print('file: $line');
+          _log.fine(() => 'file: $line');
           plumbing.sink.add(line);
         });
       }).block<String>((plumbing) async {
-        print('started block 2');
+        _log.fine(() => 'started block 2');
         plumbing.src.listen((line) {
-          print('2nd block: $line');
+          _log.fine(() => '2nd block: $line');
         });
       }).captureNone();
     });
@@ -152,7 +153,7 @@ and a second line''');
                 .captureOut())
             .toParagraph();
 
-        print('end');
+        _log.fine(() => 'end');
       });
     });
 
@@ -200,14 +201,14 @@ One
   });
 
   test('pipeline ...', () async {
-    print('start');
+    _log.fine(() => 'start');
     await HalfPipe()
         .command('ls')
         .transform(Transform.line)
         // process the output from ls printing 'file: xxx' for each line
         .block((plumbing) async {
           plumbing.src.listen((line) {
-            print('file: $line');
+            _log.fine(() => 'file: $line');
           });
         })
         // any data written to stderr is redirected to stdout.
@@ -215,10 +216,10 @@ One
         // second processor
         .block((plumbing) async {
           plumbing.src.listen((line) {
-            print('2nd: $line');
+            _log.fine(() => '2nd: $line');
           });
         })
         .print();
-    print('end');
+    _log.fine(() => 'end');
   });
 }

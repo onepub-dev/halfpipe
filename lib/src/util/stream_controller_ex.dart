@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:logging/logging.dart';
 
+final _log = Logger('StreamControllerEx');
+
 ///
 /// Intended as a drop in replacement for [StreamControllerEx]
 /// but with some extra support for debugging your streams.
@@ -49,12 +51,12 @@ class StreamControllerEx<T> implements StreamController<T> {
     final activeControllers =
         _activeControllers.where((c) => !c.isClosed).toList();
     if (activeControllers.isNotEmpty) {
-      print('Active Stream Controllers:');
+      _log.fine(() => 'Active Stream Controllers:');
       for (final controller in activeControllers) {
         print(controller.debugName);
       }
     } else {
-      print('No active stream controllers.');
+      _log.fine(() => 'No active stream controllers.');
     }
   }
 

@@ -82,7 +82,7 @@ class PipePhase<T> {
   ///      .processor(DirectoryList('*.*', workingDirectory: rootPath))
   ///      .block<String>((srcIn, srcErr, stdout, stderr) async {
   ///    await for (final line in srcIn) {
-  ///      print('Found: $line');
+  ///      _log.fine(() => 'Found: $line');
   ///    }
   ///  }).exitCode();
   /// ```

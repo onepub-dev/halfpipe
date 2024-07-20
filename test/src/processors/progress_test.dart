@@ -3,41 +3,37 @@ import 'dart:io';
 import 'package:dcli/dcli.dart' as dcli;
 import 'package:dcli_core/dcli_core.dart';
 import 'package:halfpipe/halfpipe.dart';
+import 'package:halfpipe/src/processors/progress.dart';
 import 'package:path/path.dart' hide equals;
 import 'package:test/test.dart';
 
 import '../test_app.dart';
 
 void main() async {
-  test('Stream from file', () async {
+  test('Test Progress', () async {
     // enableFineLogging();
     await withTempDirAsync((tempDir) async {
       final app = buildTestAppCommand(streamStdin: true);
       final sourcePath = join(tempDir, 'test.txt')
-        ..write('hello world\n' * 1000, newline: '')
+        ..write('hello world\n' * 10000, newline: '')
         ..append('quit');
 
+      final progressMessages = <String>[];
       final size = File(sourcePath).lengthSync();
-      const written = 0;
-      const last = 0;
       final capture = await HalfPipe()
           .processor(ReadFile(sourcePath))
-          // .transform(Transform.line)
-          // .block<String>((plumbing) async {
-          //   const counter = 0;
-          //   // plumbing.srcIn.listen((data) => _log.fine(() => '2nd: ${counter++} $data'));
-          //   plumbing.pipe(plumbing.src, plumbing.sink);
-          //   // plumbing.pipe(plumbing.srcErr, plumbing.sinkErr);
-          // })
+          .processor(Progress(size, (processed, size) {
+            final progress = '$processed / $size';
+            progressMessages.add(progress);
+          }))
           .command(app)
           .transform(Transform.line)
           .captureOut();
       final out = capture.out;
-      expect(out.length, equals(1000));
-
-      // return ('cat $sourcePath'
-      //  | 'mysql --user $user --host=$host $schema ')
-      //     .run;
+      expect(out.length, equals(10000));
+      expect(progressMessages.length, equals(2));
+      expect(progressMessages.first, equals('65536 / 120006'));
+      expect(progressMessages.last, equals('120006 / 120006'));
     });
   });
 }

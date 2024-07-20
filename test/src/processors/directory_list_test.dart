@@ -1,11 +1,13 @@
 import 'package:dcli_core/dcli_core.dart';
 import 'package:halfpipe/halfpipe.dart';
 import 'package:halfpipe/src/processors/directory_list.dart';
+import 'package:logging/logging.dart';
 import 'package:path/path.dart' hide equals;
 import 'package:test/test.dart';
 
 import '../logging.dart';
 
+final _log = Logger('directory_list_test');
 void main() {
   setUp(enableFineLogging);
 
@@ -50,9 +52,9 @@ void main() {
         .processor(DirectoryList('*.*', workingDirectory: pwd))
         .block((plumbing) async {
       plumbing.src.listen((line) {
-        print('Found: $line');
+        _log.fine(() => 'Found: $line');
       });
     }).exitCode();
-    print('completed');
+    _log.fine(() => 'completed');
   });
 }

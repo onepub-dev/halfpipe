@@ -1,7 +1,11 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:logging/logging.dart';
+
 import '../util/stream_controller_ex.dart';
+
+final _log = Logger('StdinWrapper');
 
 /// Runs [callback] with access to [stdin] for the duration of the
 /// call.
@@ -21,9 +25,9 @@ Future<void> withStdin(
     // unawaited(controller.close());
     wrapper.stdinControllers.remove(controller);
     // await wrapper.subscription.cancel();
-    print('stdin listener cancelled');
+    _log.fine(() => 'stdin listener cancelled');
     // await stdin.drain<dynamic>();
-    print('stdin drained');
+    _log.fine(() => 'stdin drained');
   }
 }
 
