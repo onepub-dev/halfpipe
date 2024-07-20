@@ -39,23 +39,27 @@ class _Utf8LineSplitterSink implements Sink<List<int>> {
     /// in the [_carry] buffer.
     for (var i = 0; i < lines.length - 1; i++) {
       _outputSink.add(lines[i]);
-      log.fine('Adding line: ${lines[i]}');
+      log.fine(() => 'Adding line: ${lines[i]}');
     }
 
     if (decodedString.endsWith('\n')) {
-      _outputSink.add(lines.last);
+      final line = lines.last;
+      _outputSink.add(line);
+      log.fine(() => 'Adding line: $line');
       _carry = '';
     } else {
       _carry = lines.isNotEmpty ? lines.last : '';
     }
 
-    log.fine('_carry line: $_carry');
+    log.fine(() => '_carry line: $_carry');
   }
 
   @override
   void close() {
+    log.fine(() => 'close called on LineSplitter');
     if (_carry.isNotEmpty) {
       _outputSink.add(_carry);
+      log.fine(() => '_carry line on close: $_carry');
       _carry = '';
     }
     _outputSink.close();
