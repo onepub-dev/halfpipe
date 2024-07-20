@@ -3,3 +3,4 @@
 /.history
 /.packages
 .failed_tracker
+test/logger.txt
