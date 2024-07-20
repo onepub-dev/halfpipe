@@ -6,7 +6,6 @@ import 'dart:convert';
 import 'package:completer_ex/completer_ex.dart';
 import 'package:logging/logging.dart';
 
-import '../util/stream_controller_ex.dart';
 import 'pipe_section.dart';
 
 class TransformerPipeSection<I, O> extends PipeSection<I, O> {
@@ -22,29 +21,12 @@ class TransformerPipeSection<I, O> extends PipeSection<I, O> {
   final outCompleter = CompleterEx<bool>(debugName: 'TransformerPipe: out');
   final errCompleter = CompleterEx<bool>(debugName: 'TransformerPipe: err');
 
-  // If we wait now then we stop the next stage in the pipeline
-  // from running.
-  // exitCode = await runProcess.exitCode;
-  final _done = CompleterEx<void>(debugName: 'TransformerSection: done');
-
   @override
-  Future<void> get waitUntilOutputDone => _done.future;
-
-  late final StreamControllerEx<I> srcIn;
-  late final StreamControllerEx<I> srcErr;
-
-  @override
-  Future<void> wire(
-    StreamControllerEx<I> srcIn,
-    StreamControllerEx<I> srcErr,
-  ) async {
-    this.srcIn = srcIn;
-    this.srcErr = srcErr;
-
+  Future<void> addPlumbing() async {
     inputConversionSinkForOut =
-        transformer.startChunkedConversion(outController.sink);
+        transformer.startChunkedConversion(sinkOutController.sink);
     inputConversionSinkForErr =
-        transformer.startChunkedConversion(errController.sink);
+        transformer.startChunkedConversion(sinkErrController.sink);
 
     /// wire source
     srcIn.stream.listen((data) {
@@ -73,13 +55,8 @@ class TransformerPipeSection<I, O> extends PipeSection<I, O> {
   }
 
   @override
-  Future<void> start() async {
-    unawaited(Future.wait<bool>([outCompleter.future, errCompleter.future])
-        // ignore: prefer_expression_function_bodies
-        .then((_) {
-      _done.complete();
-    }));
-  }
+  Future<void> start() async =>
+      Future.wait([outCompleter.future, errCompleter.future]) as Future<void>;
 
   @override
   Future<void> close() async {

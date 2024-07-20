@@ -1,7 +1,6 @@
 // ignore_for_file: avoid_returning_this
 
-import 'dart:async';
-
+import 'pipeline/block_pipe_section.dart';
 import 'pipeline/pipe_phase.dart';
 import 'processors/processor.dart';
 
@@ -11,8 +10,6 @@ import 'processors/processor.dart';
 /// If a external command is added to the pipeline then
 /// only sinkOut and sinkErr will be combined and written
 /// to the external commands stdin.
-typedef Block<I, O> = Future<void> Function(Stream<I> srcIn, Stream<I> srcErr,
-    StreamSink<O> sinkOut, StreamSink<O> sinkErr);
 
 class HalfPipe {
   HalfPipe() {
@@ -56,8 +53,8 @@ class HalfPipe {
         workingDirectory: workingDirectory,
       );
 
-  PipePhase<T> block<T>(Block<List<int>, T> callback) =>
-      initialPipePhase.block<T>(callback);
+  PipePhase<O> block<O>(BlockPlumber<List<int>, O> plumber) =>
+      initialPipePhase.block<O>(plumber);
 
   PipePhase<T> processor<T>(Processor<List<int>, T> processor) =>
       initialPipePhase.processor(processor);

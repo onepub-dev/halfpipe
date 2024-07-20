@@ -22,6 +22,7 @@ class StreamControllerEx<T> implements StreamController<T> {
     _controller.onListen = () {
       log.fine(() => 'Listener added to : $debugName');
     };
+    // _collectController(this);
   }
 
   final log = Logger((StreamControllerEx).toString());
@@ -29,6 +30,44 @@ class StreamControllerEx<T> implements StreamController<T> {
   late final StreamController<T> _controller;
 
   String? debugName;
+
+  static final List<StreamControllerEx<dynamic>> _activeControllers = [];
+  static Timer? _timer;
+
+  static void _collectController(StreamControllerEx<dynamic> controller) {
+    _activeControllers.add(controller);
+    _startPeriodicCheck();
+  }
+
+  static void _startPeriodicCheck() {
+    _timer ??= Timer.periodic(const Duration(seconds: 15), (timer) {
+      _checkActiveControllers();
+    });
+  }
+
+  static void _checkActiveControllers() {
+    final activeControllers =
+        _activeControllers.where((c) => !c.isClosed).toList();
+    if (activeControllers.isNotEmpty) {
+      print('Active Stream Controllers:');
+      for (final controller in activeControllers) {
+        print(controller.debugName);
+      }
+    } else {
+      print('No active stream controllers.');
+    }
+  }
+
+  @override
+  Future<dynamic> close() {
+    log.fine(() => 'closed called for $debugName');
+    final f = _controller.close()
+      ..whenComplete(() {
+        log.fine(() => 'closed completed for $debugName');
+        _activeControllers.remove(this);
+      });
+    return f;
+  }
 
   @override
   FutureOr<void> Function()? get onCancel => _controller.onCancel;
@@ -62,12 +101,6 @@ class StreamControllerEx<T> implements StreamController<T> {
   @override
   Future<dynamic> addStream(Stream<T> source, {bool? cancelOnError}) =>
       _controller.addStream(source, cancelOnError: cancelOnError);
-
-  @override
-  Future<dynamic> close() {
-    log.fine(() => 'closing $debugName');
-    return _controller.close();
-  }
 
   @override
   Future<dynamic> get done => _controller.done;
@@ -108,5 +141,5 @@ class StreamControllerEx<T> implements StreamController<T> {
   }
 
   @override
-  String toString() => '$debugName';
+  String toString() => 'StreamControllerEx($debugName)';
 }

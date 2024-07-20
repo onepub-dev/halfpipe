@@ -5,39 +5,59 @@ import 'dart:async';
 import 'package:completer_ex/completer_ex.dart';
 import 'package:logging/logging.dart';
 
-import '../half_pipe.dart';
-import '../util/stream_controller_ex.dart';
 import 'pipe_section.dart';
 
+typedef BlockPlumber<I, O> = Future<void> Function(
+    BlockPlumbing<I, O> plumbing);
+
+class BlockPlumbing<I, O> {
+  BlockPlumbing(this.srcIn, this.srcErr, this.sinkOut, this.sinkErr);
+
+  Stream<I> srcIn;
+  Stream<I> srcErr;
+  StreamSink<O> sinkOut;
+  StreamSink<O> sinkErr;
+
+  /// Pipe [src] to [sink].
+  void pipe(Stream<I> src, StreamSink<dynamic> sink) {
+    src.listen((line) => sink.add(line));
+  }
+}
+
 class BlockPipeSection<I, O> extends PipeSection<I, O> {
-  BlockPipeSection(this.action);
+  BlockPipeSection({this.plumber, this.run});
 
   final _log = Logger((BlockPipeSection).toString());
 
-  Block<I, O> action;
+  BlockPlumber<I, O>? plumber;
+
+  Future<void> Function()? run;
 
   final _done = CompleterEx<void>(debugName: 'BlockSection');
 
   @override
-  Future<void> get waitUntilOutputDone => _done.future;
-
-  @override
-  Future<void> wire(StreamControllerEx<dynamic> srcIn,
-      StreamControllerEx<dynamic> srcErr) async {
-    // ignore: unawaited_futures
-    action(srcIn.stream.cast<I>(), srcErr.stream.cast<I>(), outController.sink,
-            errController.sink)
-        .then((_) async {
-      _log.fine(() => 'block is done');
-      _done.complete();
-    });
+  Future<void> addPlumbing() async {
+    await plumber?.call(BlockPlumbing(
+        srcIn.stream.cast<I>(),
+        srcErr.stream.cast<I>(),
+        sinkOutController.sink,
+        sinkErrController.sink));
   }
 
   @override
   String get debugName => 'block';
 
   @override
-  void start() {
-    // No Op.
+  Future<void> start() async {
+    if (run == null) {
+      _done.complete();
+    } else {
+      await run!();
+
+      _log.fine(() => 'block is done');
+      _done.complete();
+    }
+
+    return _done.future;
   }
 }

@@ -7,7 +7,6 @@ import 'package:logging/logging.dart';
 
 import '../command_exception.dart';
 import '../run_process.dart';
-import '../util/stream_controller_ex.dart';
 import 'pipe_section.dart';
 
 abstract class HasExitCode {
@@ -73,31 +72,17 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>>
   /// Used to flag that that this pipe section has completed.
   final _done = CompleterEx<void>(debugName: 'CommandPipe: done');
 
-  @override
-  Future<void> get waitUntilOutputDone => _done.future;
-
-  late final StreamControllerEx<dynamic> srcIn;
-  late final StreamControllerEx<dynamic> srcErr;
-
   final _stdoutFlushed =
       CompleterEx<void>(debugName: 'CommandSection - stdout');
   final _stderrFlushed =
       CompleterEx<void>(debugName: 'CommandSection - stderr');
 
   @override
-  Future<void> wire(
-    StreamControllerEx<dynamic> srcIn,
-    StreamControllerEx<dynamic> srcErr,
-  ) async {
-    this.srcIn = srcIn;
-    this.srcErr = srcErr;
-
+  Future<void> addPlumbing() async {
     /// Feed data from the prior [PipeSection] into
     /// our running process.
     srcIn.stream.listen((line) => runProcess.stdin.write(line));
     srcErr.stream.listen((line) => runProcess.stdin.write(line));
-
-    //
   }
 
   @override
@@ -108,7 +93,7 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>>
       // Feed data from our running process to the next [PipeSection].
       runProcess.stdout.listen((data) {
         _log.fine(() => 'process: sending data: ${data.length}');
-        outController.sink.add(data);
+        sinkOutController.sink.add(data);
       }).onDone(() async {
         _log.fine(() => 'Command: done - out');
         _stdoutFlushed.complete();
@@ -117,7 +102,7 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>>
       /// Listen the error stream until it is done
       /// so we can wait for the stream to be flushed before
       /// we fully shutdown.
-      runProcess.stderr.listen(errController.add).onDone(() async {
+      runProcess.stderr.listen(sinkErrController.add).onDone(() async {
         _stderrFlushed.complete();
       });
 
@@ -128,7 +113,7 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>>
       ]).then((value) async {
         exitCode = await runProcess.exitCode;
 
-        if (exitCode == 0 || nothrow == true) {
+        if (exitCode == 0 || nothrow) {
           _done.complete();
         } else {
           if (_startType == _StartType.runWithArgs) {
@@ -145,6 +130,7 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>>
     } catch (e) {
       _done.completeError(e);
     }
+    return _done.future;
   }
 
   @override

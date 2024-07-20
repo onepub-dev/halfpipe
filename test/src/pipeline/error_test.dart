@@ -24,7 +24,7 @@ void main() {
         threw = true;
       }
 
-      if (threw == false) {
+      if (!threw) {
         fail('Expected an exception to be thrown');
       }
     });

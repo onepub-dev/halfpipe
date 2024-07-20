@@ -18,7 +18,12 @@ Future<void> withStdin(
   try {
     await callback(controller);
   } finally {
+    // unawaited(controller.close());
     wrapper.stdinControllers.remove(controller);
+    // await wrapper.subscription.cancel();
+    print('stdin listener cancelled');
+    // await stdin.drain<dynamic>();
+    print('stdin drained');
   }
 }
 
@@ -35,12 +40,14 @@ class StdinWrapper {
 
   StdinWrapper._internal() {
     /// distribute stdin events to all active controllers.
-    stdin.listen((event) {
+    subscription = stdin.listen((event) {
       for (final controller in stdinControllers) {
         controller.sink.add(event);
       }
     });
   }
+
+  late final StreamSubscription<List<int>> subscription;
 
   final stdinControllers = <StreamControllerEx<List<int>>>[];
   static final StdinWrapper _stdinWrapper = StdinWrapper._internal();

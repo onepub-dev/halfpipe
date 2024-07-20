@@ -1,5 +1,6 @@
 // ignore_for_file: avoid_returning_this, strict_raw_type
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:core' as core;
 import 'dart:core';
@@ -74,7 +75,7 @@ class PipePhase<T> {
     return _changeType<List<int>>(this);
   }
 
-  /// Defines a block of dart code that can is called as
+  /// Defines a block of dart code that is called as
   /// part of the pipeline.
   /// ```dart
   ///  await HalfPipe()
@@ -86,8 +87,9 @@ class PipePhase<T> {
   ///  }).exitCode();
   /// ```
 
-  PipePhase<O> block<O>(Block<T, O> callback) {
-    sections.add(BlockPipeSection<T, O>(callback));
+  PipePhase<O> block<O>(BlockPlumber<T, O> plumber,
+      [Future<void> Function()? run]) {
+    sections.add(BlockPipeSection<T, O>(plumber: plumber, run: run));
 
     return _changeType<O>(this);
   }
@@ -109,9 +111,9 @@ class PipePhase<T> {
   /// not written to the file.
   PipePhase<T> writeToFile(String pathToFile) {
     final fileSink = io.File(pathToFile).openWrite();
-    return block<T>((srcIn, srcErr, sinkOut, sinkErr) async {
-      srcIn.listen(fileSink.write, onDone: fileSink.close);
-      await sinkErr.addStream(srcErr);
+    return block<T>((plumbing) async {
+      plumbing.srcIn.listen(fileSink.write, onDone: fileSink.close);
+      await plumbing.sinkErr.addStream(plumbing.srcErr);
     });
   }
 
@@ -278,16 +280,14 @@ class PipePhase<T> {
       sections.add(TransformerPipeSection<List<int>, String>(Transform.line));
     }
 
-    sections.add(BlockPipeSection(
-      (srcIn, srcErr, sinkOut, sinkErr) async {
-        if (showStdout) {
-          srcIn.listen(core.print);
-        }
-        if (showStderr) {
-          srcErr.listen((data) => io.stderr.write(data));
-        }
-      },
-    ));
+    sections.add(BlockPipeSection(plumber: (plumbing) async {
+      if (showStdout) {
+        plumbing.srcIn.listen(core.print);
+      }
+      if (showStderr) {
+        plumbing.srcErr.listen((data) => io.stderr.write(data));
+      }
+    }));
 
     return _run();
   }
@@ -311,10 +311,15 @@ class PipePhase<T> {
 
   /// The output of the final phase is funnelled into
   /// these two controllers.
-  StreamControllerEx<T> sinkOutController =
-      StreamControllerEx<T>(debugName: 'final: out');
-  StreamControllerEx<T> sinkErrController =
-      StreamControllerEx<T>(debugName: 'final err');
+  /// Each [PipePhase] declares this pair but
+  /// only the final phase uses them.
+  /// We delcare them here so that they can inherit
+  /// there <T> from the  final [PipePhase] that
+  /// actually users them.
+  final sinkOutController = StreamControllerEx<T>(debugName: 'final: out');
+  final sinkErrController = StreamControllerEx<T>(debugName: 'final err');
+  final dummyStdErr =
+      StreamControllerEx<List<int>>(debugName: 'dummy stdin - error channel');
 
   // Wire up the [PipeSection]s by attaching their streams
   // and then run the pipeline.
@@ -330,19 +335,19 @@ class PipePhase<T> {
 
       /// The first section has no error inputs so wire in
       /// an empty stream.
-      StreamControllerEx<dynamic> priorErrController =
-          StreamControllerEx<List<int>>(
-              debugName: 'dummy stdin - error channel');
+      StreamControllerEx<dynamic> priorErrController = dummyStdErr;
 
       // wire each section running
       for (final section in sections) {
-        section.wire(
+        await section.initStreams(
           priorOutController,
           priorErrController,
         );
 
-        priorOutController = section.outController;
-        priorErrController = section.errController;
+        await section.addPlumbing();
+
+        priorOutController = section.sinkOutController;
+        priorErrController = section.sinkErrController;
       }
 
       /// Wire up the final section's output and error
@@ -354,7 +359,7 @@ class PipePhase<T> {
 
       // start each section running
       for (final section in sections) {
-        section.start();
+        section.done = section.start();
       }
 
       /// Wait for all sections to complete.
@@ -366,7 +371,7 @@ class PipePhase<T> {
             /// As soon as one section throws we stop waiting on
             /// subsequent sections as we need to shut down the
             /// pipeline and clean up.
-            await section.waitUntilOutputDone;
+            await section.done;
           }
           // ignore: avoid_catches_without_on_clauses
         } catch (e, st) {
@@ -406,11 +411,25 @@ class PipePhase<T> {
       }
     }
 
+    _dispose();
+
     return exitCode;
   }
 
+  void _dispose() {
+    // we are being discared so close the controllers
+    unawaited(sinkOutController.close());
+    unawaited(sinkErrController.close());
+    unawaited(dummyStdErr.close());
+  }
+
+  /// Each time another [PipeSection] is added to the pipeline
+  /// we need to change the type of the [PipePhase] to match
+  /// so we create a new [PipePhase] and discared the old
+  /// one.
   PipePhase<O> _changeType<O>(PipePhase<T> src) {
     final out = PipePhase<O>(src._halfPipe2)..sections = src.sections;
+    _dispose();
     return out;
   }
 

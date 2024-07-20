@@ -48,10 +48,10 @@ void main() {
   test('async listing', () async {
     await HalfPipe()
         .processor(DirectoryList('*.*', workingDirectory: pwd))
-        .block<String>((srcIn, srcErr, stdout, stderr) async {
-      await for (final line in srcIn) {
+        .block((plumbing) async {
+      plumbing.srcIn.listen((line) {
         print('Found: $line');
-      }
+      });
     }).exitCode();
     print('completed');
   });

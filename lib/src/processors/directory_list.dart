@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:completer_ex/completer_ex.dart';
 import 'package:dcli_core/dcli_core.dart';
 
-import '../util/stream_controller_ex.dart';
 import 'processor.dart';
 
 enum FileEntityTypes { file, directory, link }
@@ -35,19 +34,6 @@ class DirectoryList<I> extends Processor<I, String> {
 
   late final _done = CompleterEx<void>(debugName: 'DirectoryList');
 
-  late final StreamControllerEx<I> srcIn;
-  late final StreamControllerEx<I> srcErr;
-
-  @override
-  Future<void> get waitUntilOutputDone => _done.future;
-
-  @override
-  Future<void> wire(
-      StreamControllerEx<I> srcIn, StreamControllerEx<I> srcErr) async {
-    this.srcIn = srcIn;
-    this.srcErr = srcErr;
-  }
-
   @override
   Future<void> start() async {
     try {
@@ -57,7 +43,7 @@ class DirectoryList<I> extends Processor<I, String> {
           caseSensitive: caseSensitive,
           includeHidden: includeHidden,
           types: types.map(_map).toList())) {
-        outController.sink.add(file.pathTo);
+        sinkOutController.sink.add(file.pathTo);
       }
       _done.complete();
     }
@@ -65,6 +51,7 @@ class DirectoryList<I> extends Processor<I, String> {
     catch (e) {
       _done.completeError(e);
     }
+    return _done.future;
   }
 
   @override
@@ -75,4 +62,9 @@ class DirectoryList<I> extends Processor<I, String> {
         FileEntityTypes.directory => FileSystemEntityType.directory,
         FileEntityTypes.link => FileSystemEntityType.link,
       };
+
+  @override
+  Future<void> addPlumbing() async {
+    // NOOP
+  }
 }
