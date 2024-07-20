@@ -23,9 +23,9 @@ class Tee<T> extends Processor<T, T> {
 
   @override
   Future<void> addPlumbing() async {
-    srcIn.stream.listen((data) {
-      sinkOutController.sink.add(data);
-      injector.sinkOutController.add(data);
+    src.stream.listen((data) {
+      sinkController.sink.add(data);
+      injector.sinkController.add(data);
     })
       ..onDone(() {
         // onError may already have called completed

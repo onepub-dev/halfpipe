@@ -49,7 +49,7 @@ void main() {
     await HalfPipe()
         .processor(DirectoryList('*.*', workingDirectory: pwd))
         .block((plumbing) async {
-      plumbing.srcIn.listen((line) {
+      plumbing.src.listen((line) {
         print('Found: $line');
       });
     }).exitCode();

@@ -14,11 +14,11 @@ class Skip extends Processor<String, String> {
     var count = linesToSkip;
 
     // do not pass the first [lineToSkip]
-    srcIn.stream.listen((line) {
+    src.stream.listen((line) {
       if (count > 0) {
         count--;
       } else {
-        sinkOutController.sink.add(line);
+        sinkController.sink.add(line);
       }
     })
       ..onDone(() {

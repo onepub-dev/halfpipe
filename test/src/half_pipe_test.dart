@@ -45,7 +45,7 @@ void main() {
             .transform(Transform.line)
             // process the output of ls through a block of dart code
             .block<String>((plumbing) async {
-          plumbing.srcIn.listen(list.add);
+          plumbing.src.listen(list.add);
         }).captureNone();
 
         expect(list.length, equals(2));
@@ -60,13 +60,13 @@ void main() {
           .transform(Transform.line)
           // process the output of ls through a block of dart code
           .block((plumbing) async {
-        plumbing.srcIn.listen((line) {
+        plumbing.src.listen((line) {
           print('file: $line');
-          plumbing.sinkOut.add(line);
+          plumbing.sink.add(line);
         });
       }).block<String>((plumbing) async {
         print('started block 2');
-        plumbing.srcIn.listen((line) {
+        plumbing.src.listen((line) {
           print('2nd block: $line');
         });
       }).captureNone();
@@ -206,7 +206,7 @@ One
         .transform(Transform.line)
         // process the output from ls printing 'file: xxx' for each line
         .block((plumbing) async {
-          plumbing.srcIn.listen((line) {
+          plumbing.src.listen((line) {
             print('file: $line');
           });
         })
@@ -214,7 +214,7 @@ One
         .redirectStdout(Redirect.toStdout)
         // second processor
         .block((plumbing) async {
-          plumbing.srcIn.listen((line) {
+          plumbing.src.listen((line) {
             print('2nd: $line');
           });
         })

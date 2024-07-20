@@ -9,7 +9,7 @@ import 'pipe_section_mixin.dart';
 
 // ignore: one_member_abstracts
 abstract class PipeSection<I, O> with PipeSectionMixin<O> {
-  late final StreamControllerEx<I> srcIn;
+  late final StreamControllerEx<I> src;
   late final StreamControllerEx<I> srcErr;
 
   /// The future retuned by the call to [start]
@@ -21,7 +21,7 @@ abstract class PipeSection<I, O> with PipeSectionMixin<O> {
   /// to wire up any listeners before any data is pumped through
   /// the pipeline.
   /// This [PipeSection] must NOT send any data until [start] is called.
-  /// [srcIn] is a stream from the prior [PipeSection] equivalent stdout.
+  /// [src] is a stream from the prior [PipeSection] equivalent stdout.
   /// [srcErr] is a stream from the prior [PipeSection] equivalent to stderr.
   /// Whilst this method returns a [Future] and delay needs to be short
   /// lived as it will stop the pipeline from starting. Any long running
@@ -29,10 +29,10 @@ abstract class PipeSection<I, O> with PipeSectionMixin<O> {
 
   @nonVirtual
   Future<void> initStreams(
-    StreamControllerEx<I> srcIn,
+    StreamControllerEx<I> src,
     StreamControllerEx<I> srcErr,
   ) async {
-    this.srcIn = srcIn;
+    this.src = src;
     this.srcErr = srcErr;
   }
 

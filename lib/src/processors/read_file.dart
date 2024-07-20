@@ -32,7 +32,7 @@ class ReadFile extends Processor<List<int>, List<int>> {
       /// write the contents of the file into the stream.
       sub = fileStream.listen((event) {
         log.fine('writing: ${event.length} bytes');
-        sinkOutController.sink.add(event);
+        sinkController.sink.add(event);
       })
         ..onDone(() {
           log.fine(() => 'ReadFile: onDone');

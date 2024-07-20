@@ -23,11 +23,8 @@ class CapturePipeSection<I, O> extends PipeSection<I, O> {
   @override
   Future<void> addPlumbing() async {
     unawaited(runZonedGuarded(() async {
-      await plumber(BlockPlumbing(
-          srcIn.stream.cast<I>(),
-          srcErr.stream.cast<I>(),
-          sinkOutController.sink,
-          sinkErrController.sink));
+      await plumber(BlockPlumbing(src.stream.cast<I>(), srcErr.stream.cast<I>(),
+          sinkController.sink, sinkErrController.sink));
       _done.complete();
       // ignore: unnecessary_lambdas
     }, (e, st) {

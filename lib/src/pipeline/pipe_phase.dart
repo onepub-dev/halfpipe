@@ -112,7 +112,7 @@ class PipePhase<T> {
   PipePhase<T> writeToFile(String pathToFile) {
     final fileSink = io.File(pathToFile).openWrite();
     return block<T>((plumbing) async {
-      plumbing.srcIn.listen(fileSink.write, onDone: fileSink.close);
+      plumbing.src.listen(fileSink.write, onDone: fileSink.close);
       await plumbing.sinkErr.addStream(plumbing.srcErr);
     });
   }
@@ -282,7 +282,7 @@ class PipePhase<T> {
 
     sections.add(BlockPipeSection(plumber: (plumbing) async {
       if (showStdout) {
-        plumbing.srcIn.listen(core.print);
+        plumbing.src.listen(core.print);
       }
       if (showStderr) {
         plumbing.srcErr.listen((data) => io.stderr.write(data));
@@ -346,7 +346,7 @@ class PipePhase<T> {
 
         await section.addPlumbing();
 
-        priorOutController = section.sinkOutController;
+        priorOutController = section.sinkController;
         priorErrController = section.sinkErrController;
       }
 

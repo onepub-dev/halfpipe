@@ -15,7 +15,7 @@ mixin PipeSectionMixin<O> {
 
   StreamControllerEx<O> get sinkErrController => _sinkErrController;
 
-  StreamControllerEx<O> get sinkOutController => _sinkOutController;
+  StreamControllerEx<O> get sinkController => _sinkOutController;
 
   Future<void> close() async {
     _log.fine(() =>

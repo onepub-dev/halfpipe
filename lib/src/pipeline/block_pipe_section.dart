@@ -11,11 +11,11 @@ typedef BlockPlumber<I, O> = Future<void> Function(
     BlockPlumbing<I, O> plumbing);
 
 class BlockPlumbing<I, O> {
-  BlockPlumbing(this.srcIn, this.srcErr, this.sinkOut, this.sinkErr);
+  BlockPlumbing(this.src, this.srcErr, this.sink, this.sinkErr);
 
-  Stream<I> srcIn;
+  Stream<I> src;
   Stream<I> srcErr;
-  StreamSink<O> sinkOut;
+  StreamSink<O> sink;
   StreamSink<O> sinkErr;
 
   /// Pipe [src] to [sink].
@@ -37,11 +37,8 @@ class BlockPipeSection<I, O> extends PipeSection<I, O> {
 
   @override
   Future<void> addPlumbing() async {
-    await plumber?.call(BlockPlumbing(
-        srcIn.stream.cast<I>(),
-        srcErr.stream.cast<I>(),
-        sinkOutController.sink,
-        sinkErrController.sink));
+    await plumber?.call(BlockPlumbing(src.stream.cast<I>(),
+        srcErr.stream.cast<I>(), sinkController.sink, sinkErrController.sink));
   }
 
   @override

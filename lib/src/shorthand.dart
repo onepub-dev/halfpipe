@@ -56,7 +56,7 @@ extension StringAsPipeline on String {
             extensionSearch: extensionSearch)
         .transform(Transform.line)
         .block<String>((plumbing) async {
-      plumbing.srcIn.listen((line) => stdout(line));
+      plumbing.src.listen((line) => stdout(line));
       plumbing.srcErr.listen((line) => stderr(line));
     }).captureNone();
   }

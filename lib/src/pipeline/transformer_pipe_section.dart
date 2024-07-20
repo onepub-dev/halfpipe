@@ -24,12 +24,12 @@ class TransformerPipeSection<I, O> extends PipeSection<I, O> {
   @override
   Future<void> addPlumbing() async {
     inputConversionSinkForOut =
-        transformer.startChunkedConversion(sinkOutController.sink);
+        transformer.startChunkedConversion(sinkController.sink);
     inputConversionSinkForErr =
         transformer.startChunkedConversion(sinkErrController.sink);
 
     /// wire source
-    srcIn.stream.listen((data) {
+    src.stream.listen((data) {
       _log.fine(() => 'Transformer: got data $data');
       inputConversionSinkForOut!.add(data);
     }, onDone: () {

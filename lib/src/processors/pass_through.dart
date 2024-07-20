@@ -12,8 +12,8 @@ class PassThrough<I> extends Processor<I, I> {
 
   @override
   Future<void> addPlumbing() async {
-    srcIn.stream.listen((line) {
-      sinkOutController.sink.add(line);
+    src.stream.listen((line) {
+      sinkController.sink.add(line);
     })
       ..onDone(() {
         // onError may already have called completed

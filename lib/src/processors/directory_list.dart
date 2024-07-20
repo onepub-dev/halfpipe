@@ -43,7 +43,7 @@ class DirectoryList<I> extends Processor<I, String> {
           caseSensitive: caseSensitive,
           includeHidden: includeHidden,
           types: types.map(_map).toList())) {
-        sinkOutController.sink.add(file.pathTo);
+        sinkController.sink.add(file.pathTo);
       }
       _done.complete();
     }

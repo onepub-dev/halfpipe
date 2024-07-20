@@ -14,8 +14,8 @@ class Transform<I, O> extends Transformer<I, O> {
 
   @override
   Future<void> addPlumbing() async {
-    srcIn.stream.transform(converter).listen((event) {
-      sinkOutController.sink.add(event);
+    src.stream.transform(converter).listen((event) {
+      sinkController.sink.add(event);
     }, onDone: () async {
       // onError may already have called completed
       if (!_done.isCompleted) {

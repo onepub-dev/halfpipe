@@ -17,7 +17,7 @@ class ProcessorPipeSection<I, O> extends PipeSection<I, O> {
 
   @override
   Future<void> addPlumbing() async {
-    await processor.initStreams(srcIn, srcErr);
+    await processor.initStreams(src, srcErr);
     await processor.addPlumbing();
   }
 
@@ -29,8 +29,8 @@ class ProcessorPipeSection<I, O> extends PipeSection<I, O> {
   @override
   Future<void> close() async {
     /// close will never complete if there are no listeners.
-    if (processor.sinkOutController.hasListener) {
-      await processor.sinkOutController.close();
+    if (processor.sinkController.hasListener) {
+      await processor.sinkController.close();
     }
 
     /// close will never complete if there are no listeners.
@@ -45,7 +45,7 @@ class ProcessorPipeSection<I, O> extends PipeSection<I, O> {
   StreamControllerEx<O> get sinkErrController => processor.sinkErrController;
 
   @override
-  StreamControllerEx<O> get sinkOutController => processor.sinkOutController;
+  StreamControllerEx<O> get sinkController => processor.sinkController;
 
   @override
   String get debugName => 'processor:${processor.debugName}';
