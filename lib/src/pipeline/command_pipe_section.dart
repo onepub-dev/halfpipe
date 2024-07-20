@@ -15,7 +15,7 @@ abstract class HasExitCode {
 
 enum _StartType { runWithArgs, runWithCommandLine }
 
-class CommandPipeSection extends PipeSection<List<int>, List<int>>
+class CommandPipeSection<I> extends PipeSection<I, List<int>>
     implements HasExitCode {
   CommandPipeSection.commandLine(String commandLine,
       {bool runInShell = false,
@@ -77,23 +77,49 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>>
   final _stderrFlushed =
       CompleterEx<void>(debugName: 'CommandSection - stderr');
 
+  final _started = CompleterEx<void>(debugName: 'CommandSection - started');
   @override
   Future<void> addPlumbing() async {
     /// Feed data from the prior [PipeSection] into
     /// our running process.
-    srcIn.stream.listen((line) => runProcess.stdin.write(line));
-    srcErr.stream.listen((line) => runProcess.stdin.write(line));
+    src.stream.listen((data) async {
+      try {
+        _log.fine(() => 'command src recieved: $data');
+
+        /// Make certain we don't write to stdin until the
+        /// process has started.
+        await _started.future;
+
+        /// Write the data to stdin
+        if (data is List<int>) {
+          runProcess.stdin.add(data as List<int>);
+        } else {
+          /// convert data to a string and the send it to stdin
+          runProcess.stdin.write(data);
+        }
+        _log.fine(() => 'command src sent to app: $data');
+        // ignore: avoid_catches_without_on_clauses
+      } catch (e, st) {
+        _log.severe('Error writing to stdin', e, st);
+      }
+    });
+    srcErr.stream.listen((data) {
+      _log.fine(() => 'command srcErr recieved: $data');
+      runProcess.stdin.write(data);
+    });
   }
 
   @override
   Future<void> start() async {
     try {
+      _log.fine(() => 'starting $_commandLine');
       await runProcess.start();
+      _log.fine(() => 'started $_commandLine');
 
       // Feed data from our running process to the next [PipeSection].
       runProcess.stdout.listen((data) {
-        _log.fine(() => 'process: sending data: ${data.length}');
-        sinkOutController.sink.add(data);
+        _log.fine(() => 'command stdout recieved: $data');
+        sinkController.sink.add(data);
       }).onDone(() async {
         _log.fine(() => 'Command: done - out');
         _stdoutFlushed.complete();
@@ -105,6 +131,10 @@ class CommandPipeSection extends PipeSection<List<int>, List<int>>
       runProcess.stderr.listen(sinkErrController.add).onDone(() async {
         _stderrFlushed.complete();
       });
+
+      /// Now the app has started and the streams are all
+      /// wired allow data to flow into the spawned up.
+      _started.complete();
 
       unawaited(Future.wait<void>([
         _stdoutFlushed.future,
