@@ -10,17 +10,22 @@
 
 library;
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:args/args.dart';
+import 'package:completer_ex/completer_ex.dart';
+import 'package:dcli/dcli.dart';
 import 'package:path/path.dart';
 
 /// The path to the test app - so that unit tests can call us.
 final pathToTestApp =
     join(Directory.current.path, 'test', 'src', 'test_app.dart');
+final pathToLogger =
+    join(DartProject.self.pathToProjectRoot, 'test', 'logger.txt');
 
-void main(List<String> arguments) {
+void main(List<String> arguments) async {
   final parser = ArgParser()
     ..addOption('exit-code', abbr: 'x', defaultsTo: '0', help: 'Exit code')
     ..addOption('stdout-lines',
@@ -28,8 +33,11 @@ void main(List<String> arguments) {
     ..addOption('stderr-lines',
         abbr: 'e', defaultsTo: '0', help: 'Number of lines to write to stderr')
     ..addFlag('stream-stdin',
-        abbr: 'i', help: 'Stream stdin and print to stdout');
+        abbr: 'i',
+        help:
+            '''Stream stdin and print to stdout until a single line with 'quit' is seen in stdin''');
 
+  pathToLogger.write('test_app: starting 1');
   final argResults = parser.parse(arguments);
 
   final exitCode = int.parse(argResults['exit-code'] as String);
@@ -38,14 +46,8 @@ void main(List<String> arguments) {
   final streamStdin = argResults['stream-stdin'] as bool;
 
   if (streamStdin) {
-    stdin
-        .transform(const Utf8Decoder())
-        .transform(const LineSplitter())
-        .listen((line) {
-      stdout.writeln(line);
-    }).onDone(() {
-      exit(exitCode);
-    });
+    await _streamStdin();
+    exitNow(exitCode);
   } else {
     for (var i = 1; i <= stdoutLines; i++) {
       stdout.writeln('$i: This is a line written to stdout');
@@ -54,8 +56,13 @@ void main(List<String> arguments) {
     for (var i = 1; i <= stderrLines; i++) {
       stderr.writeln('$i: This is a line written to stderr');
     }
-    exit(exitCode);
   }
+  exitNow(exitCode);
+}
+
+void exitNow(int exitCode) {
+  pathToLogger.append('test_app: exiting $exitCode');
+  exit(exitCode);
 }
 
 /// Builds a command line to run this test app.
@@ -76,4 +83,50 @@ String buildTestAppCommand(
       ..write(' --stderr-lines $errLines');
   }
   return sb.toString();
+}
+
+Future<void> _streamStdin() async {
+  final exitSeen = CompleterEx<void>();
+
+  final controller = StreamController<List<int>>();
+
+  // Listen to stdin and forward data to the controller
+  // so that we can exit when we see 'exit' in the stream.
+  stdin
+      // .transform(utf8.decoder)
+      // .transform(const LineSplitter())
+      .listen((line) async {
+    pathToLogger.append('test_app $line');
+
+    controller.add(line);
+  }, onError: (e) {
+    pathToLogger.append('test_app: streamStdin error $e');
+  }, onDone: () {
+    pathToLogger.append('test_app: streamStdin done');
+  });
+
+  // Listen to the custom stream
+  controller.stream
+      .transform(utf8.decoder)
+      .transform(const LineSplitter())
+      .listen(
+    (line) async {
+      if (line != 'quit') {
+        stdout.writeln(line);
+        pathToLogger.append('test_app(2nd) $line');
+      } else {
+        pathToLogger.append('test_app(2nd) quitting');
+        await controller.close();
+      }
+    },
+    onDone: exitSeen.complete,
+  );
+
+  Future.delayed(const Duration(seconds: 60), () {
+    pathToLogger.append('test_app: streamStdin timed out');
+    exitSeen.complete();
+  });
+
+  await exitSeen.future;
+  pathToLogger.append('test_app: streamStdin done');
 }
