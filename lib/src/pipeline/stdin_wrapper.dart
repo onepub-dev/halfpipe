@@ -1,11 +1,9 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:logging/logging.dart';
-
 import '../util/stream_controller_ex.dart';
 
-final _log = Logger('StdinWrapper');
+// final _log = Logger('StdinWrapper');
 
 /// Runs [callback] with access to [stdin] for the duration of the
 /// call.
@@ -22,12 +20,7 @@ Future<void> withStdin(
   try {
     await callback(controller);
   } finally {
-    // unawaited(controller.close());
     wrapper.stdinControllers.remove(controller);
-    // await wrapper.subscription.cancel();
-    _log.fine(() => 'stdin listener cancelled');
-    // await stdin.drain<dynamic>();
-    _log.fine(() => 'stdin drained');
   }
 }
 
@@ -44,14 +37,15 @@ class StdinWrapper {
 
   StdinWrapper._internal() {
     /// distribute stdin events to all active controllers.
-    subscription = stdin.listen((event) {
+    // subscription =
+    stdin.listen((event) {
       for (final controller in stdinControllers) {
         controller.sink.add(event);
       }
     });
   }
 
-  late final StreamSubscription<List<int>> subscription;
+  // late final StreamSubscription<List<int>> subscription;
 
   final stdinControllers = <StreamControllerEx<List<int>>>[];
   static final StdinWrapper _stdinWrapper = StdinWrapper._internal();

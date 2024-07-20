@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:dcli/dcli.dart' as dcli;
 import 'package:dcli_core/dcli_core.dart';
 import 'package:halfpipe/halfpipe.dart';
@@ -17,9 +15,6 @@ void main() async {
         ..write('hello world\n' * 1000, newline: '')
         ..append('quit');
 
-      final size = File(sourcePath).lengthSync();
-      const written = 0;
-      const last = 0;
       final capture = await HalfPipe()
           .processor(ReadFile(sourcePath))
           // .transform(Transform.line)

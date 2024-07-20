@@ -2,8 +2,6 @@
 
 import 'dart:async';
 
-import 'package:logging/logging.dart';
-
 import '../processors/processor.dart';
 import '../util/stream_controller_ex.dart';
 import 'pipe_section.dart';
@@ -13,7 +11,7 @@ class ProcessorPipeSection<I, O> extends PipeSection<I, O> {
 
   final Processor<I, O> processor;
 
-  final _log = Logger((ProcessorPipeSection).toString());
+  // final _log = Logger((ProcessorPipeSection).toString());
 
   @override
   Future<void> addPlumbing() async {

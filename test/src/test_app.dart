@@ -99,6 +99,7 @@ Future<void> _streamStdin() async {
     pathToLogger.append('test_app $line');
 
     controller.add(line);
+  // ignore: inference_failure_on_untyped_parameter
   }, onError: (e) {
     pathToLogger.append('test_app: streamStdin error $e');
   }, onDone: () {

@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:logging/logging.dart';
 
-final _log = Logger('StreamControllerEx');
+// final _log = Logger('StreamControllerEx');
 
 ///
 /// Intended as a drop in replacement for [StreamControllerEx]
@@ -34,31 +34,31 @@ class StreamControllerEx<T> implements StreamController<T> {
   String? debugName;
 
   static final List<StreamControllerEx<dynamic>> _activeControllers = [];
-  static Timer? _timer;
+  // static Timer? _timer;
 
-  static void _collectController(StreamControllerEx<dynamic> controller) {
-    _activeControllers.add(controller);
-    _startPeriodicCheck();
-  }
+  // static void _collectController(StreamControllerEx<dynamic> controller) {
+  //   _activeControllers.add(controller);
+  //   _startPeriodicCheck();
+  // }
 
-  static void _startPeriodicCheck() {
-    _timer ??= Timer.periodic(const Duration(seconds: 15), (timer) {
-      _checkActiveControllers();
-    });
-  }
+  // static void _startPeriodicCheck() {
+  //   _timer ??= Timer.periodic(const Duration(seconds: 15), (timer) {
+  //     _checkActiveControllers();
+  //   });
+  // }
 
-  static void _checkActiveControllers() {
-    final activeControllers =
-        _activeControllers.where((c) => !c.isClosed).toList();
-    if (activeControllers.isNotEmpty) {
-      _log.fine(() => 'Active Stream Controllers:');
-      for (final controller in activeControllers) {
-        print(controller.debugName);
-      }
-    } else {
-      _log.fine(() => 'No active stream controllers.');
-    }
-  }
+  // static void _checkActiveControllers() {
+  //   final activeControllers =
+  //       _activeControllers.where((c) => !c.isClosed).toList();
+  //   if (activeControllers.isNotEmpty) {
+  //     _log.fine(() => 'Active Stream Controllers:');
+  //     for (final controller in activeControllers) {
+  //       print(controller.debugName);
+  //     }
+  //   } else {
+  //     _log.fine(() => 'No active stream controllers.');
+  //   }
+  // }
 
   @override
   Future<dynamic> close() {
