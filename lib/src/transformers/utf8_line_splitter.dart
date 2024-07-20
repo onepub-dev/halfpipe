@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:logging/logging.dart';
+
 class Utf8LineSplitter extends Converter<List<int>, String> {
   final Utf8Decoder _utf8Decoder = const Utf8Decoder();
   final LineSplitter _lineSplitter = const LineSplitter();
@@ -25,14 +27,29 @@ class _Utf8LineSplitterSink implements Sink<List<int>> {
 
   String _carry = '';
 
+  final Logger log = Logger('Utf8LineSplitterSink');
+
   @override
   void add(List<int> chunk) {
     final decodedString = _carry + _utf8Decoder.convert(chunk);
     final lines = _lineSplitter.convert(decodedString);
+
+    /// To handle lines that continue over to the
+    /// next chunk, we need to keep the last line
+    /// in the [_carry] buffer.
     for (var i = 0; i < lines.length - 1; i++) {
       _outputSink.add(lines[i]);
+      log.fine('Adding line: ${lines[i]}');
     }
-    _carry = lines.isNotEmpty ? lines.last : '';
+
+    if (decodedString.endsWith('\n')) {
+      _outputSink.add(lines.last);
+      _carry = '';
+    } else {
+      _carry = lines.isNotEmpty ? lines.last : '';
+    }
+
+    log.fine('_carry line: $_carry');
   }
 
   @override
