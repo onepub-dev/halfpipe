@@ -9,8 +9,10 @@ typedef ProgressCallback = void Function(int count, int total);
 /// A [Processor] that reports progress.
 /// The [callback] will be called for each 1% of data
 /// processed.
-class Progress<I> extends Processor<I, I> {
-  Progress(this.size, this.callback) : increment = size ~/ 100;
+/// The src and srcErr streams are automatially plumbed through to the next
+/// section.
+class ShowProgress<I> extends Processor<I, I> {
+  ShowProgress(this.size, this.callback) : increment = size ~/ 100;
   final int size;
   final int increment;
   final ProgressCallback callback;

@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:dcli/dcli.dart' as dcli;
 import 'package:dcli_core/dcli_core.dart';
 import 'package:halfpipe/halfpipe.dart';
-import 'package:halfpipe/src/processors/progress.dart';
 import 'package:path/path.dart' hide equals;
 import 'package:test/test.dart';
 
@@ -22,7 +21,7 @@ void main() async {
       final size = File(sourcePath).lengthSync();
       final capture = await HalfPipe()
           .processor(ReadFile(sourcePath))
-          .processor(Progress(size, (processed, size) {
+          .processor(ShowProgress(size, (processed, size) {
             final progress = '$processed / $size';
             progressMessages.add(progress);
           }))
