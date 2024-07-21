@@ -15,7 +15,7 @@ void main() async {
       final app = buildTestAppCommand(streamStdin: true);
       final sourcePath = join(tempDir, 'test.txt')
         ..write('hello world\n' * 10000, newline: '')
-        ..append('quit');
+        ..append('quit\n', newline: '');
 
       final progressMessages = <String>[];
       final size = File(sourcePath).lengthSync();
@@ -31,8 +31,9 @@ void main() async {
       final out = capture.out;
       expect(out.length, equals(10000));
       expect(progressMessages.length, equals(2));
-      expect(progressMessages.first, equals('65536 / 120006'));
-      expect(progressMessages.last, equals('120006 / 120006'));
+
+      expect(progressMessages.first, equals('65536 / 120005'));
+      expect(progressMessages.last, equals('120005 / 120005'));
     });
   });
 }
