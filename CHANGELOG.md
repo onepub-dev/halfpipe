@@ -1,3 +1,6 @@
+# 1.0.2
+- Upgraded to lastet version of dcli.
+
 # 1.0.1
 - Upgraded to lastet version of dcli.
 
