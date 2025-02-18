@@ -51,7 +51,7 @@ class RunProcess {
 
     if (terminal) {
       throw StateError(
-          '''When `terminal` is true ther process does not have its own stdout but is directly attached to the terminals stdout''');
+          '''When `terminal` is true, the process does not have its own stdout but is directly attached to the terminals stdout''');
     }
     return _process!.stdout;
   }

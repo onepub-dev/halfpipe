@@ -1,3 +1,6 @@
+# 1.0.3
+- upgraded dcli dependencies.
+
 # 1.0.2
 - Upgraded to lastet version of dcli.
 
