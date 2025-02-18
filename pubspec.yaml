@@ -27,4 +27,4 @@ dependencies:
 dev_dependencies:
   lint_hard: ^5.0.0
   test: ^1.16.0
-publish_to: https://beta.onepub.dev/api/sxpsdavuhn/
+# publish_to: https://beta.onepub.dev/api/sxpsdavuhn/
