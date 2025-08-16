@@ -12,14 +12,23 @@ typedef ProgressCallback = void Function(int count, int total);
 /// The src and srcErr streams are automatially plumbed through to the next
 /// section.
 class ShowProgress<I> extends Processor<I, I> {
-  ShowProgress(this.size, this.callback) : increment = size ~/ 100;
   final int size;
+
   final int increment;
+
   final ProgressCallback callback;
+
   final _done = CompleterEx<void>(debugName: 'ProgressSection');
 
+  // part of the public api
+  // ignore: omit_obvious_property_types
   int written = 0;
+
+  // part of the public api
+  // ignore: omit_obvious_property_types
   int last = 0;
+
+  ShowProgress(this.size, this.callback) : increment = size ~/ 100;
 
   @override
   Future<void> addPlumbing() async {
@@ -52,7 +61,7 @@ class ShowProgress<I> extends Processor<I, I> {
   }
 
   @override
-  Future<void> start() async => _done.future;
+  Future<void> start() => _done.future;
 
   @override
   String get debugName => 'progress';

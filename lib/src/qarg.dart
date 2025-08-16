@@ -8,6 +8,10 @@ import 'package:path/path.dart';
 // TODO(bsutton): consider replacing with code from the dart sdk:
 /// https://github.com/dart-lang/io/blob/master/lib/src/shell_words.dart
 class QArg {
+  bool? wasQuoted;
+
+  late String arg;
+
   QArg(String iarg) {
     wasQuoted = false;
     arg = iarg.trim();
@@ -25,9 +29,6 @@ class QArg {
   }
 
   QArg.fromParsed(this.arg, {required this.wasQuoted});
-
-  bool? wasQuoted;
-  late String arg;
 
   /// We only do glob expansion if the arg contains at least one of
   /// *, [, ?

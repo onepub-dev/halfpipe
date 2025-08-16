@@ -10,6 +10,22 @@ import 'process_helper.dart';
 enum ArgMethod { command, commandAndArgs, commandAndList }
 
 class RunProcess {
+  String workingDirectory;
+
+  late ParsedCliCommand _parsed;
+
+  bool runInShell;
+
+  bool detached;
+
+  bool terminal;
+
+  bool nothrow;
+
+  bool extensionSearch;
+
+  Process? _process;
+
   RunProcess.commandLine(String commandLine,
       {required this.runInShell,
       required this.detached,
@@ -33,16 +49,6 @@ class RunProcess {
     _parsed =
         ParsedCliCommand.fromArgList(command, args ?? [], workingDirectory);
   }
-
-  String workingDirectory;
-
-  late ParsedCliCommand _parsed;
-
-  bool runInShell;
-  bool detached;
-  bool terminal;
-  bool nothrow;
-  bool extensionSearch;
 
   Stream<List<int>> get stdout {
     if (_process == null) {
@@ -75,8 +81,6 @@ class RunProcess {
 
     return _process!.stdin;
   }
-
-  Process? _process;
 
   Future<int> get exitCode {
     if (_process == null) {

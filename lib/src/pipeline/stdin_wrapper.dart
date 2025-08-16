@@ -33,6 +33,10 @@ Future<void> withStdin(
 /// the events to all listeners.
 ///
 class StdinWrapper {
+  final stdinControllers = <StreamControllerEx<List<int>>>[];
+
+  static final _stdinWrapper = StdinWrapper._internal();
+
   factory StdinWrapper() => _stdinWrapper;
 
   StdinWrapper._internal() {
@@ -44,9 +48,4 @@ class StdinWrapper {
       }
     });
   }
-
-  // late final StreamSubscription<List<int>> subscription;
-
-  final stdinControllers = <StreamControllerEx<List<int>>>[];
-  static final StdinWrapper _stdinWrapper = StdinWrapper._internal();
 }

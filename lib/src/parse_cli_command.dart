@@ -13,6 +13,15 @@ import 'qarg.dart';
 /// into the dart Process.start method as a application name and a series
 /// of arguments.
 class ParsedCliCommand {
+  /// The commdand that we parsed from the command line
+  late String cmd;
+
+  /// The args that we parsed from the command line
+  var args = <String>[];
+
+  /// The escape character use for command lines
+  static const escapeCharacter = '^';
+
   ///
   ParsedCliCommand(String command, String? workingDirectory) {
     workingDirectory ??= pwd;
@@ -46,15 +55,6 @@ class ParsedCliCommand {
     final qargs = QArg.translate(rawArgs);
     args = _expandGlobs(qargs, workingDirectory);
   }
-
-  /// The commdand that we parsed from the command line
-  late String cmd;
-
-  /// The args that we parsed from the command line
-  List<String> args = <String>[];
-
-  /// The escape character use for command lines
-  static const escapeCharacter = '^';
 
   /// parses the given command breaking them done into words
   List<QArg> _parse(String commandLine) {
@@ -211,8 +211,6 @@ class ParsedCliCommand {
         /// we are in a quote so just suck in
         /// characters until we see a matching quote.
         case _ParseState.nestedQuote:
-
-          // ignore: invariant_booleans
           if (char == currentState.matchingQuote) {
             // We have a matching closing quote
             currentState = stateStack.pop();
@@ -299,16 +297,6 @@ enum _ParseState {
 }
 
 class _ParseFrame {
-  /// Create a [_ParseFrame]
-  _ParseFrame(this.state, this.offset);
-
-  /// Create a [_ParseFrame] when we enter the [_ParseState.inQuote] state.
-  _ParseFrame.forQuote(
-      StackList<_ParseFrame> stack, this.offset, this.matchingQuote)
-      : state = isQuoteActive(stack)
-            ? _ParseState.nestedQuote
-            : _ParseState.inQuote;
-
   /// The state held by this Frame.
   _ParseState state;
 
@@ -319,6 +307,16 @@ class _ParseFrame {
   /// The character offset from the start of the command line
   /// that caused us to enter this state.
   int offset;
+
+  /// Create a [_ParseFrame]
+  _ParseFrame(this.state, this.offset);
+
+  /// Create a [_ParseFrame] when we enter the [_ParseState.inQuote] state.
+  _ParseFrame.forQuote(
+      StackList<_ParseFrame> stack, this.offset, this.matchingQuote)
+      : state = isQuoteActive(stack)
+            ? _ParseState.nestedQuote
+            : _ParseState.inQuote;
 
   @override
   String toString() => '${state.name} offset: $offset quote: $matchingQuote';

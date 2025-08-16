@@ -10,6 +10,15 @@ import 'package:stack_trace/stack_trace.dart';
 /// Thrown when any of the process related method
 /// such as .run and .start fail.
 class CommandException extends DCliException {
+  /// The command line that was being run.
+  String cmdLine;
+
+  /// the exit code of the command.
+  int? exitCode;
+
+  /// the error.
+  String reason;
+
   ///
   CommandException(
     this.cmdLine,
@@ -27,15 +36,6 @@ class CommandException extends DCliException {
     Trace? stackTrace,
   })  : cmdLine = '$cmd ${args.join(' ')}',
         super(reason, stackTrace);
-
-  /// The command line that was being run.
-  String cmdLine;
-
-  /// the exit code of the command.
-  int? exitCode;
-
-  /// the error.
-  String reason;
 
   @override
   String get message => '''

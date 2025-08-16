@@ -1,3 +1,4 @@
+// builder
 // ignore_for_file: avoid_returning_this
 
 import 'dart:async';
@@ -14,29 +15,32 @@ import 'pipe_section.dart';
 /// Ideally we would like to capture stdout and stderr
 /// but I'm not certain this is possible.
 class CapturePipeSection<I, O> extends PipeSection<I, O> {
-  CapturePipeSection(this.plumber);
-
   BlockPlumber<I, O> plumber;
 
   final _done = CompleterEx<void>(debugName: 'CaptureSection');
 
+  CapturePipeSection(this.plumber);
+
   @override
   Future<void> addPlumbing() async {
-    unawaited(runZonedGuarded(() async {
-      await plumber(BlockPlumbing(src.stream.cast<I>(), srcErr.stream.cast<I>(),
-          sinkController.sink, sinkErrController.sink));
-      _done.complete();
-      // ignore: unnecessary_lambdas
-    }, (e, st) {
-      _done.completeError(e, st);
-    }, zoneSpecification: ZoneSpecification(print: (self, parent, zone, line) {
-      stdout.add(line.codeUnits);
-    })));
+    unawaited(runZonedGuarded(
+        () async {
+          await plumber(BlockPlumbing(
+              src.stream.cast<I>(),
+              srcErr.stream.cast<I>(),
+              sinkController.sink,
+              sinkErrController.sink));
+          _done.complete();
+        },
+        _done.completeError,
+        zoneSpecification: ZoneSpecification(print: (self, parent, zone, line) {
+          stdout.add(line.codeUnits);
+        })));
   }
 
   @override
   String get debugName => 'capture';
 
   @override
-  Future<void> start() async => _done.future;
+  Future<void> start()  => _done.future;
 }

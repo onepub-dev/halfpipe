@@ -1,3 +1,5 @@
+// this class implements the builder pattern
+// so returning this is fundemental to the pattern.
 // ignore_for_file: avoid_returning_this
 
 import 'pipeline/block_pipe_section.dart';
@@ -12,11 +14,11 @@ import 'processors/processor.dart';
 /// to the external commands stdin.
 
 class HalfPipe {
+  late final PipePhase<List<int>> initialPipePhase;
+
   HalfPipe() {
     initialPipePhase = PipePhase<List<int>>(this);
   }
-
-  late final PipePhase<List<int>> initialPipePhase;
 
   PipePhase<List<int>> command(
     String commandLine, {

@@ -8,6 +8,14 @@ import 'package:logging/logging.dart';
 /// Intended as a drop in replacement for [StreamControllerEx]
 /// but with some extra support for debugging your streams.
 class StreamControllerEx<T> implements StreamController<T> {
+  final log = Logger((StreamControllerEx).toString());
+
+  late final StreamController<T> _controller;
+
+  String? debugName;
+
+  static final List<StreamControllerEx<dynamic>> _activeControllers = [];
+
   StreamControllerEx(
       {void Function()? onListen,
       void Function()? onPause,
@@ -27,43 +35,14 @@ class StreamControllerEx<T> implements StreamController<T> {
     // _collectController(this);
   }
 
-  final log = Logger((StreamControllerEx).toString());
-
-  late final StreamController<T> _controller;
-
-  String? debugName;
-
-  static final List<StreamControllerEx<dynamic>> _activeControllers = [];
-  // static Timer? _timer;
-
-  // static void _collectController(StreamControllerEx<dynamic> controller) {
-  //   _activeControllers.add(controller);
-  //   _startPeriodicCheck();
-  // }
-
-  // static void _startPeriodicCheck() {
-  //   _timer ??= Timer.periodic(const Duration(seconds: 15), (timer) {
-  //     _checkActiveControllers();
-  //   });
-  // }
-
-  // static void _checkActiveControllers() {
-  //   final activeControllers =
-  //       _activeControllers.where((c) => !c.isClosed).toList();
-  //   if (activeControllers.isNotEmpty) {
-  //     _log.fine(() => 'Active Stream Controllers:');
-  //     for (final controller in activeControllers) {
-  //       print(controller.debugName);
-  //     }
-  //   } else {
-  //     _log.fine(() => 'No active stream controllers.');
-  //   }
-  // }
-
   @override
   Future<dynamic> close() {
     log.fine(() => 'closed called for $debugName');
     final f = _controller.close()
+      // the close method is inherited so we can't
+      // make async and it doesn't actually need to be
+      // as we discard the controllers in the background
+      // ignore: discarded_futures
       ..whenComplete(() {
         log.fine(() => 'closed completed for $debugName');
         _activeControllers.remove(this);
@@ -72,6 +51,8 @@ class StreamControllerEx<T> implements StreamController<T> {
   }
 
   @override
+  /// It's an override so we have no choice.
+  // ignore: avoid_futureor_void
   FutureOr<void> Function()? get onCancel => _controller.onCancel;
 
   @override
@@ -123,23 +104,23 @@ class StreamControllerEx<T> implements StreamController<T> {
   Stream<T> get stream => _controller.stream;
 
   @override
-  set onCancel(FutureOr<void> Function()? _onCancel) {
-    _controller.onCancel = _onCancel;
+  set onCancel(FutureOr<void> Function()? onCancel) {
+    _controller.onCancel = onCancel;
   }
 
   @override
-  set onListen(void Function()? _onListen) {
-    _controller.onListen = _onListen;
+  set onListen(void Function()? onListen) {
+    _controller.onListen = onListen;
   }
 
   @override
-  set onPause(void Function()? _onPause) {
-    _controller.onPause = _onPause;
+  set onPause(void Function()? onPause) {
+    _controller.onPause = onPause;
   }
 
   @override
-  set onResume(void Function()? _onResume) {
-    _controller.onResume = _onResume;
+  set onResume(void Function()? onResume) {
+    _controller.onResume = onResume;
   }
 
   @override

@@ -1,3 +1,4 @@
+// builder pattern
 // ignore_for_file: avoid_returning_this
 
 import 'dart:async';
@@ -11,12 +12,15 @@ typedef BlockPlumber<I, O> = Future<void> Function(
     BlockPlumbing<I, O> plumbing);
 
 class BlockPlumbing<I, O> {
-  BlockPlumbing(this.src, this.srcErr, this.sink, this.sinkErr);
-
   Stream<I> src;
+
   Stream<I> srcErr;
+
   StreamSink<O> sink;
+
   StreamSink<O> sinkErr;
+
+  BlockPlumbing(this.src, this.srcErr, this.sink, this.sinkErr);
 
   /// Pipe [src] to [sink].
   void pipe(Stream<I> src, StreamSink<dynamic> sink) {
@@ -25,8 +29,6 @@ class BlockPlumbing<I, O> {
 }
 
 class BlockPipeSection<I, O> extends PipeSection<I, O> {
-  BlockPipeSection({this.plumber, this.run});
-
   final _log = Logger((BlockPipeSection).toString());
 
   BlockPlumber<I, O>? plumber;
@@ -34,6 +36,8 @@ class BlockPipeSection<I, O> extends PipeSection<I, O> {
   Future<void> Function()? run;
 
   final _done = CompleterEx<void>(debugName: 'BlockSection');
+
+  BlockPipeSection({this.plumber, this.run});
 
   @override
   Future<void> addPlumbing() async {

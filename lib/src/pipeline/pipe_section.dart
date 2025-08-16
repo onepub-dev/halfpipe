@@ -1,3 +1,4 @@
+// builder
 // ignore_for_file: avoid_returning_this, comment_references
 
 import 'dart:async';
@@ -7,7 +8,6 @@ import 'package:meta/meta.dart';
 import '../util/stream_controller_ex.dart';
 import 'pipe_section_mixin.dart';
 
-// ignore: one_member_abstracts
 abstract class PipeSection<I, O> with PipeSectionMixin<O> {
   late final StreamControllerEx<I> src;
   late final StreamControllerEx<I> srcErr;

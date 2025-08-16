@@ -8,7 +8,7 @@ import 'package:test/test.dart';
 
 import '../test_app.dart';
 
-void main() async {
+void main()  {
   test('Test Progress', () async {
     // enableFineLogging();
     await withTempDirAsync((tempDir) async {

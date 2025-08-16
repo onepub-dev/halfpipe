@@ -1,3 +1,6 @@
+// part of the public api
+// ignore_for_file: omit_obvious_property_types
+
 import 'pipe_phase.dart';
 
 /// A [Capture] is returned from the the 'capture' terminal
@@ -66,10 +69,10 @@ class CaptureMixed<T> implements Capture {
 }
 
 class CaptureNone<T> implements Capture {
-  CaptureNone(this.exitCode);
-
   @override
   late final int exitCode;
+
+  CaptureNone(this.exitCode);
 
   @override
   String toParagraph() => '';

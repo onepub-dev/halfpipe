@@ -6,7 +6,7 @@ import 'package:test/test.dart';
 
 import '../test_app.dart';
 
-void main() async {
+void main()  {
   test('Stream from file', () async {
     // enableFineLogging();
     await withTempDirAsync((tempDir) async {

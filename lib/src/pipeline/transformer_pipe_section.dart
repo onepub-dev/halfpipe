@@ -1,3 +1,4 @@
+// builder.
 // ignore_for_file: avoid_returning_this
 
 import 'dart:async';
@@ -9,17 +10,19 @@ import 'package:logging/logging.dart';
 import 'pipe_section.dart';
 
 class TransformerPipeSection<I, O> extends PipeSection<I, O> {
-  TransformerPipeSection(this.transformer);
-
   final _log = Logger((TransformerPipeSection).toString());
 
   final Converter<I, O> transformer;
 
   late final Sink<I>? inputConversionSinkForOut;
+
   late final Sink<I>? inputConversionSinkForErr;
 
   final outCompleter = CompleterEx<bool>(debugName: 'TransformerPipe: out');
+
   final errCompleter = CompleterEx<bool>(debugName: 'TransformerPipe: err');
+
+  TransformerPipeSection(this.transformer);
 
   @override
   Future<void> addPlumbing() async {
@@ -55,7 +58,7 @@ class TransformerPipeSection<I, O> extends PipeSection<I, O> {
   }
 
   @override
-  Future<void> start() async =>
+  Future<void> start() =>
       Future.wait([outCompleter.future, errCompleter.future]) as Future<void>;
 
   @override

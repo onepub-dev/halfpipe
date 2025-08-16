@@ -11,7 +11,7 @@ import 'test_app.dart';
 
 final _log = Logger('half_pipe_test');
 void main() {
-  setUpAll(() async {
+  setUpAll(()  {
     expect(File(pathToTestApp).existsSync(), true);
 
     Logger.root.level = Level.FINE; // defaults to Level.INFO
@@ -86,7 +86,7 @@ void main() {
       });
     });
 
-    test('tee', () async {
+    test('tee', ()  {
       // final list = <String>[];
       // await HalfPipe()
       //     .command('ls')
@@ -94,7 +94,7 @@ void main() {
       //     .captureNone();
     });
 
-    test('expect', () async {
+    test('expect', ()  {
       // final dpipe = HalfPipe2()
       //     .command('docker image ls')
       //     .expect(0)
@@ -212,7 +212,7 @@ One
           });
         })
         // any data written to stderr is redirected to stdout.
-        .redirectStdout(Redirect.toStdout)
+        .redirectStderr(Redirect.toStdout)
         // second processor
         .block((plumbing) async {
           plumbing.src.listen((line) {

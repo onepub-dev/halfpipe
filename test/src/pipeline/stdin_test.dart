@@ -8,7 +8,7 @@ import 'package:test/test.dart';
 void main() {
   test('stdin', () async {
     await withEnvironmentAsync(
-        environment: {'DOCKER_CONFIG': join(pwd, '.docker')}, () async {
+        environment: {'DOCKER_CONFIG': join(pwd, '.docker')}, ()  {
       const password = 'testing';
       var args = '--username onepub';
       return HalfPipe()
@@ -22,6 +22,7 @@ void main() {
     });
   });
 
+  // we use in a later test.
   // ignore: unused_element
   Future<void> restore(String sourcePath) async {
     await withEnvironmentAsync(

@@ -1,3 +1,4 @@
+// builder
 // ignore_for_file: avoid_returning_this
 
 import 'dart:async';
@@ -7,11 +8,9 @@ import '../util/stream_controller_ex.dart';
 import 'pipe_section.dart';
 
 class ProcessorPipeSection<I, O> extends PipeSection<I, O> {
-  ProcessorPipeSection(this.processor);
-
   final Processor<I, O> processor;
 
-  // final _log = Logger((ProcessorPipeSection).toString());
+  ProcessorPipeSection(this.processor);
 
   @override
   Future<void> addPlumbing() async {

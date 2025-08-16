@@ -95,11 +95,12 @@ Future<void> _streamStdin() async {
   stdin
       // .transform(utf8.decoder)
       // .transform(const LineSplitter())
-      .listen((line) async {
+      .listen((line) {
     pathToLogger.append('test_app $line');
 
     controller.add(line);
-  // ignore: inference_failure_on_untyped_parameter
+    // i really don't understand the error here...
+    // ignore: inference_failure_on_untyped_parameter
   }, onError: (e) {
     pathToLogger.append('test_app: streamStdin error $e');
   }, onDone: () {

@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:halfpipe/src/transformers/utf8_line_splitter.dart';
 import 'package:test/test.dart';
 
-void main() async {
+void main()  {
   test('split lines', () async {
     final input = Stream<List<int>>.fromIterable([
       utf8.encode('Hello\nWor'),

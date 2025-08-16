@@ -1,3 +1,4 @@
+// builder pattern
 // ignore_for_file: avoid_returning_this
 
 import 'dart:async';
@@ -17,6 +18,34 @@ enum _StartType { runWithArgs, runWithCommandLine }
 
 class CommandPipeSection<I> extends PipeSection<I, List<int>>
     implements HasExitCode {
+  final _log = Logger((CommandPipeSection).toString());
+
+  RunProcess runProcess;
+
+  final bool nothrow;
+
+  final _StartType _startType;
+
+  String? _commandLine;
+
+  String? _command;
+
+  List<String>? _args;
+
+  @override
+  late final int exitCode;
+
+  /// Used to flag that that this pipe section has completed.
+  final _done = CompleterEx<void>(debugName: 'CommandPipe: done');
+
+  final _stdoutFlushed =
+      CompleterEx<void>(debugName: 'CommandSection - stdout');
+
+  final _stderrFlushed =
+      CompleterEx<void>(debugName: 'CommandSection - stderr');
+
+  final _started = CompleterEx<void>(debugName: 'CommandSection - started');
+
   CommandPipeSection.commandLine(String commandLine,
       {bool runInShell = false,
       bool detached = false,
@@ -54,30 +83,6 @@ class CommandPipeSection<I> extends PipeSection<I, List<int>>
             extensionSearch: extensionSearch,
             workingDirectory: workingDirectory);
 
-  final _log = Logger((CommandPipeSection).toString());
-
-  RunProcess runProcess;
-
-  final bool nothrow;
-
-  final _StartType _startType;
-
-  String? _commandLine;
-  String? _command;
-  List<String>? _args;
-
-  @override
-  late final int exitCode;
-
-  /// Used to flag that that this pipe section has completed.
-  final _done = CompleterEx<void>(debugName: 'CommandPipe: done');
-
-  final _stdoutFlushed =
-      CompleterEx<void>(debugName: 'CommandSection - stdout');
-  final _stderrFlushed =
-      CompleterEx<void>(debugName: 'CommandSection - stderr');
-
-  final _started = CompleterEx<void>(debugName: 'CommandSection - started');
   @override
   Future<void> addPlumbing() async {
     /// Feed data from the prior [PipeSection] into
@@ -98,6 +103,7 @@ class CommandPipeSection<I> extends PipeSection<I, List<int>>
           runProcess.stdin.write(data);
         }
         _log.fine(() => 'command src sent to app: $data');
+        // we need to catch all errors and log them.
         // ignore: avoid_catches_without_on_clauses
       } catch (e, st) {
         _log.severe('Error writing to stdin', e, st);
@@ -120,7 +126,7 @@ class CommandPipeSection<I> extends PipeSection<I, List<int>>
       runProcess.stdout.listen((data) {
         _log.fine(() => 'command stdout recieved: $data');
         sinkController.sink.add(data);
-      }).onDone(() async {
+      }).onDone(() {
         _log.fine(() => 'Command: done - out');
         _stdoutFlushed.complete();
       });
@@ -128,9 +134,9 @@ class CommandPipeSection<I> extends PipeSection<I, List<int>>
       /// Listen the error stream until it is done
       /// so we can wait for the stream to be flushed before
       /// we fully shutdown.
-      runProcess.stderr.listen(sinkErrController.add).onDone(() async {
-        _stderrFlushed.complete();
-      });
+      runProcess.stderr
+          .listen(sinkErrController.add)
+          .onDone(_stderrFlushed.complete);
 
       /// Now the app has started and the streams are all
       /// wired allow data to flow into the spawned up.
@@ -156,6 +162,7 @@ class CommandPipeSection<I> extends PipeSection<I, List<int>>
         }
       }));
 
+      // catch all errors so we can report them.
       // ignore: avoid_catches_without_on_clauses
     } catch (e) {
       _done.completeError(e);

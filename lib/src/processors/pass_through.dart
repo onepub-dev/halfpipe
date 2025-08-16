@@ -36,7 +36,7 @@ class PassThrough<I> extends Processor<I, I> {
   }
 
   @override
-  Future<void> start() async {
+  Future<void> start()  {
     unawaited(Future.wait([inCompleter.future, errCompleter.future])
         .then((_) => _done.complete));
 

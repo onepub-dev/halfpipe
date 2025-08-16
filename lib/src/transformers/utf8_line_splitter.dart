@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'package:logging/logging.dart';
 
 class Utf8LineSplitter extends Converter<List<int>, String> {
-  final Utf8Decoder _utf8Decoder = const Utf8Decoder();
-  final LineSplitter _lineSplitter = const LineSplitter();
+  final _utf8Decoder = const Utf8Decoder();
+  final _lineSplitter = const LineSplitter();
 
   @override
   String convert(List<int> input) {
@@ -19,15 +19,18 @@ class Utf8LineSplitter extends Converter<List<int>, String> {
 }
 
 class _Utf8LineSplitterSink implements Sink<List<int>> {
-  _Utf8LineSplitterSink(
-      this._outputSink, this._utf8Decoder, this._lineSplitter);
   final Sink<String> _outputSink;
+
   final Utf8Decoder _utf8Decoder;
+
   final LineSplitter _lineSplitter;
 
-  String _carry = '';
+  var _carry = '';
 
-  final Logger log = Logger('Utf8LineSplitterSink');
+  final log = Logger('Utf8LineSplitterSink');
+
+  _Utf8LineSplitterSink(
+      this._outputSink, this._utf8Decoder, this._lineSplitter);
 
   @override
   void add(List<int> chunk) {

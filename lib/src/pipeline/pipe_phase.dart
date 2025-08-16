@@ -1,4 +1,5 @@
-// ignore_for_file: avoid_returning_this, strict_raw_type
+// builder pattern
+// ignore_for_file: avoid_returning_this
 
 import 'dart:async';
 import 'dart:convert';
@@ -27,19 +28,32 @@ import 'transformer_pipe_section.dart';
 /// last maxBuffer lines [tail]
 enum CaptureMode { head, tail }
 
-/// Describes the type of data <T> that the pipeline
+/// Describes the type of data `<T>` that the pipeline
 /// is holding at then end of a [PipeSection].
 /// As data move through the pipeline it's type may
 /// be translated a number of times.
 /// All pipelines start with int data.
 class PipePhase<T> {
-  PipePhase(this._halfPipe2);
-
   final HalfPipe _halfPipe2;
 
+  // the sections can be of different types.
+  // ignore: strict_raw_type
   List<PipeSection> sections = [];
 
   final log = Logger((PipePhase).toString());
+
+  /// stdout of the final phase is funnelled into
+  /// this controllers.
+  final sinkOutController = StreamControllerEx<T>(debugName: 'final: out');
+
+  /// stderr of the final phase is funnelled into
+  /// these two controllers.
+  final sinkErrController = StreamControllerEx<T>(debugName: 'final err');
+
+  final dummyStdErr =
+      StreamControllerEx<List<int>>(debugName: 'dummy stdin - error channel');
+
+  PipePhase(this._halfPipe2);
 
   PipePhase<List<int>> command(String commandLine,
       {bool runInShell = false,
@@ -80,13 +94,14 @@ class PipePhase<T> {
   /// ```dart
   ///  await HalfPipe()
   ///      .processor(DirectoryList('*.*', workingDirectory: rootPath))
+  ///      .transform(Transform.line)
   ///      .block<String>((srcIn, srcErr, stdout, stderr) async {
+  ///         // write each line to a log file.
   ///    await for (final line in srcIn) {
   ///      _log.fine(() => 'Found: $line');
   ///    }
   ///  }).exitCode();
   /// ```
-
   PipePhase<O> block<O>(BlockPlumber<T, O> plumber,
       [Future<void> Function()? run]) {
     sections.add(BlockPipeSection<T, O>(plumber: plumber, run: run));
@@ -94,12 +109,41 @@ class PipePhase<T> {
     return _changeType<O>(this);
   }
 
-  ///
+  /// Used to add a [Processor] into the pipeline.
+  /// ```dart
+  ///   await HalfPipe()
+  ///      .processor(ReadFile(sourcePath))
+  ///      .processor(ShowProgress(size, (written, total) {
+  ///        print('hi');
+  ///        if (Terminal().hasTerminal) {
+  ///          Terminal().column = 10;
+  ///          echo('$written/$total');
+  ///        } else {
+  ///          print('$written/$total');
+  ///        }
+  ///      }))
+  ///      .command('mysql --user $user --host=$host $schema ')
+  ///      .printmix();
+  /// ```
   PipePhase<O> processor<O>(Processor<T, O> processor) {
     sections.add(ProcessorPipeSection<T, O>(processor));
     return _changeType<O>(this);
   }
 
+  /// Used to transform the 'type' of the data as it moves from
+  /// one [Processor] to the next.
+  /// HalfPipe ships with a standard int to Line convertor
+  /// but you can create your own transformers to convert
+  /// between any types.
+  /// ```dart
+  ///  await HalfPipe()
+  ///      .processor(DirectoryList('*.*', workingDirectory: rootPath))
+  ///      .transform(Transform.line)
+  ///      .block<String>((srcIn, srcErr, stdout, stderr) async {
+  ///         await for (final line in srcIn) {
+  ///         print('Found: $line');
+  ///       }
+  ///  }).exitCode();
   PipePhase<O> transform<O>(Converter<T, O> converter) {
     sections.add(TransformerPipeSection<T, O>(converter));
 
@@ -117,8 +161,17 @@ class PipePhase<T> {
     });
   }
 
-  /// redirect the processors output
+  /// Redirect stdout from the prior processor to stderr or /dev/null.
+  /// ```dart
+  /// .redirectStdout(Redirect.toStderr)
+  /// ```
   PipePhase<T> redirectStdout(Redirect redirect) => this;
+
+  /// Redirect stderr from the prior processor to stdout or /dev/null.
+  /// to the other stream.
+  /// ```dart
+  /// .redirectStderr(Redirect.toStdout)
+  /// ```
   PipePhase<T> redirectStderr(Redirect redirect) => this;
 
   //////////////////////////////////////////////////////
@@ -161,11 +214,11 @@ class PipePhase<T> {
   }
 
   /// Runs the pipeline. Any output written to stdout or
-  /// stderr will be let through to the terminal.
+  /// stderr by a process in the pipeline will be written to the terminal.
   /// If one or more of the [PipeSection] implements [HasExitCode]
   /// the exitCode of the last [HasExitCode] section is returned otherwise
   /// 0 is returned.
-  core.Future<core.int> exitCode() async => _run();
+  core.Future<core.int> exitCode() => _run();
 
   /// Returns the 'out' stream and the 'err' stream
   /// as two separate lists.
@@ -195,8 +248,10 @@ class PipePhase<T> {
     return capture;
   }
 
-  /// Returns the 'out' stream and discards the 'err'stream.
+  /// Runs the pipeline capturing stdout to a list. stderr is discarded.
+  ///
   /// The [CaptureOut.out] list can hold up to [maxBuffer] elements.
+  ///
   /// If one or more of the [PipeSection] implements [HasExitCode]
   /// the exitCode of the last [HasExitCode] section is available in the
   /// [CaptureOut] otherwise the exitCode is set to zero.
@@ -211,7 +266,7 @@ class PipePhase<T> {
     return capture;
   }
 
-  /// Returns the 'err' stream and discards the 'out'stream.
+  /// Runs the pipeline capturing stderr to a list. stdout is discarded.
   /// The [CaptureErr.err] list can hold up to [maxBuffer] elements.
   ///
   /// If one or more of the [PipeSection] implements [HasExitCode]
@@ -275,7 +330,7 @@ class PipePhase<T> {
   ///
   /// If one of the [PipeSection]s runs a Command then exit code from the
   /// last one is returned otherwise 0 is returned.
-  Future<int> printmix({bool showStdout = true, bool showStderr = true}) async {
+  Future<int> printmix({bool showStdout = true, bool showStderr = true}) {
     if (T == List<int>) {
       sections.add(TransformerPipeSection<List<int>, String>(Transform.line));
     }
@@ -299,7 +354,7 @@ class PipePhase<T> {
   ///
   /// If one of the [PipeSection]s runs a Command then exit code from the
   /// last one is returned otherwise 0 is returned.
-  Future<int> print() async => printmix(showStderr: false);
+  Future<int> print() => printmix(showStderr: false);
 
   /// Runs the pipeline printing the err stream to stderr.
   /// If the stream is a `List<int>` we automatically
@@ -307,19 +362,7 @@ class PipePhase<T> {
   ///
   /// If one of the [PipeSection]s runs a Command then exit code from the
   /// last one is returned otherwise 0 is returned.
-  Future<int> printerr() async => printmix(showStdout: false);
-
-  /// The output of the final phase is funnelled into
-  /// these two controllers.
-  /// Each [PipePhase] declares this pair but
-  /// only the final phase uses them.
-  /// We delcare them here so that they can inherit
-  /// there <T> from the  final [PipePhase] that
-  /// actually users them.
-  final sinkOutController = StreamControllerEx<T>(debugName: 'final: out');
-  final sinkErrController = StreamControllerEx<T>(debugName: 'final err');
-  final dummyStdErr =
-      StreamControllerEx<List<int>>(debugName: 'dummy stdin - error channel');
+  Future<int> printerr() => printmix(showStdout: false);
 
   // Wire up the [PipeSection]s by attaching their streams
   // and then run the pipeline.
@@ -373,6 +416,7 @@ class PipePhase<T> {
             /// pipeline and clean up.
             await section.done;
           }
+          // we need to reprot all errors.
           // ignore: avoid_catches_without_on_clauses
         } catch (e, st) {
           firstException = e;
@@ -432,34 +476,22 @@ class PipePhase<T> {
     _dispose();
     return out;
   }
+}
 
-  // core.Future<core.int> run() async => _run();
+/// Takes the two passed streams and returns them as a single intermingled
+/// stream.
+/// This is a convenience method.
+Future<Stream<S>> mixStreams<S>(Stream<S> stream1, Stream<S> stream2) async {
+  // Create a StreamGroup
+  final group = StreamGroup<S>();
 
-  // Stream<T> get stdout => sinkOutController.stream;
+  // Add both streams to the StreamGroup
+  await group.add(stream1);
+  await group.add(stream2);
 
-  /// This is a Terminal method which causes the pipeline to run
-  ///
-  /// Delivers a stream of errors reported by sections of the
-  /// pipeline. If you have [CommandPipeSection]s then you
-  /// must call them with nothrow:true otherwise the first
-  /// error will shut the pipeline down.
-  // Stream<T> get stderr => sinkErrController.stream;
+  // TODO(bsutton): not certian if this is correct.
+  await group.close();
 
-  // Future<Stream<T>> get stdmix async => mixStreams(stdout, stderr);
-
-// Function to mix two streams
-  Future<Stream<S>> mixStreams<S>(Stream<S> stream1, Stream<S> stream2) async {
-    // Create a StreamGroup
-    final group = StreamGroup<S>();
-
-    // Add both streams to the StreamGroup
-    await group.add(stream1);
-    await group.add(stream2);
-
-    // TODO(bsutton): not certian if this is correct.
-    await group.close();
-
-    // Return the combined stream from the StreamGroup
-    return group.stream;
-  }
+  // Return the combined stream from the StreamGroup
+  return group.stream;
 }

@@ -4,16 +4,30 @@ import 'package:completer_ex/completer_ex.dart';
 
 import 'processor.dart';
 
+/// A process designed to skil a number of lines
+/// in the input.
+///
+/// ```dart
+///   (await HalfPipe()
+///      .processor(ReadFile(pathToLineFile))
+///      .transform(Transform.line)
+///       // skip the first 5 lines that pass through the processor
+///      .processor<String>(Skip(5))
+///      .captureOut())
+///  .toParagraph();
+///```
 class Skip extends Processor<String, String> {
-  Skip(this.linesToSkip);
   int linesToSkip;
+
   final _done = CompleterEx<void>(debugName: 'SkipSection');
+
+  Skip(this.linesToSkip);
 
   @override
   Future<void> addPlumbing() async {
     var count = linesToSkip;
 
-    // do not pass the first [lineToSkip]
+    // do not pass the first 'n' [linesToSkip]
     src.stream.listen((line) {
       if (count > 0) {
         count--;
@@ -34,7 +48,7 @@ class Skip extends Processor<String, String> {
   }
 
   @override
-  Future<void> start() async => _done.future;
+  Future<void> start()  => _done.future;
 
   @override
   String get debugName => 'skip';

@@ -19,20 +19,26 @@ enum FileEntityTypes { file, directory, link }
 /// processor.
 ///P
 class DirectoryList<I> extends Processor<I, String> {
+  String pattern;
+
+  String workingDirectory;
+
+  bool recursive;
+
+  bool caseSensitive;
+
+  bool includeHidden;
+
+  List<FileEntityTypes> types;
+
+  late final _done = CompleterEx<void>(debugName: 'DirectoryList');
+
   DirectoryList(this.pattern,
       {this.workingDirectory = '.',
       this.recursive = true,
       this.caseSensitive = false,
       this.includeHidden = false,
       this.types = const [FileEntityTypes.file]});
-  String pattern;
-  String workingDirectory;
-  bool recursive;
-  bool caseSensitive;
-  bool includeHidden;
-  List<FileEntityTypes> types;
-
-  late final _done = CompleterEx<void>(debugName: 'DirectoryList');
 
   @override
   Future<void> start() async {
@@ -47,6 +53,7 @@ class DirectoryList<I> extends Processor<I, String> {
       }
       _done.complete();
     }
+    // we need to report all errors.
     // ignore: avoid_catches_without_on_clauses
     catch (e) {
       _done.completeError(e);

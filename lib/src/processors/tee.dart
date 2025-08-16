@@ -7,19 +7,21 @@ import 'pass_through.dart';
 import 'processor.dart';
 
 class Tee<T> extends Processor<T, T> {
-  Tee(this.other) {
-    /// Add an injector to the start of the pipeline so we can become
-    /// the source.
-    other.sections.insert(0, injector);
-  }
-
   PassThrough<T> injector = PassThrough();
+
   PipePhase<T> other;
 
   final _done = CompleterEx<void>(debugName: 'Tee');
 
   final inCompleter = CompleterEx<void>(debugName: 'Tee:in');
+
   final errCompleter = CompleterEx<void>(debugName: 'Tee:err');
+
+  Tee(this.other) {
+    /// Add an injector to the start of the pipeline so we can become
+    /// the source.
+    other.sections.insert(0, injector);
+  }
 
   @override
   Future<void> addPlumbing() async {
@@ -35,9 +37,9 @@ class Tee<T> extends Processor<T, T> {
       })
       ..onError(inCompleter.completeError);
 
-    srcErr.stream.listen((line) {
-      sinkErrController.sink.add(line);
-      injector.sinkErrController.add(line);
+    srcErr.stream.listen((data) {
+      sinkErrController.sink.add(data);
+      injector.sinkErrController.add(data);
     })
       ..onDone(() {
         // onError may already have called completed
@@ -49,7 +51,7 @@ class Tee<T> extends Processor<T, T> {
   }
 
   @override
-  Future<void> start() async {
+  Future<void> start()  {
     unawaited(Future.wait([inCompleter.future, errCompleter.future])
         .then((_) => _done.complete()));
 
