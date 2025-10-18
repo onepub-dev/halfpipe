@@ -221,34 +221,34 @@ packages:
     dependency: "direct main"
     description:
       name: dcli
-      sha256: ea0eb92d25db5b03ff5b4307913779954e603dec51d9d129d3dae1bced1bf5b3
+      sha256: d1f0c5c5b746c1dea6de0711f2c5db31349af8a27276d5d572bbba0aa7341f7e
       url: "https://pub.dev"
     source: hosted
-    version: "7.0.5"
+    version: "8.1.0"
   dcli_common:
     dependency: "direct main"
     description:
       name: dcli_common
-      sha256: "7385095109829de997967e704bc9f0f2570de763bfe9eb4c497cc44fd91df8e5"
+      sha256: "6e36a9e2137c5de64c5cfc2f18d824554459e65c6092daf036643574cc9902cf"
       url: "https://pub.dev"
     source: hosted
-    version: "7.0.2"
+    version: "8.0.0"
   dcli_core:
     dependency: "direct main"
     description:
       name: dcli_core
-      sha256: "2843396a9fd0b6c31c30fe930fd7af4ea592cba5c9a856b5d099bd19169226ac"
+      sha256: "69d030fdca204cd8636ccc7b8e09468d327051298f2ed24cdfe088588f38b5e7"
       url: "https://pub.dev"
     source: hosted
-    version: "7.0.3"
+    version: "8.0.0"
   dcli_terminal:
     dependency: transitive
     description:
       name: dcli_terminal
-      sha256: d34ba19905db65bc848c1ee28d8115c68f802e970726f100e4f8e062de92226a
+      sha256: "4837ba720a540c395feb48307b4fa8e5932d8c202fe5768cdb0bc46110b7761b"
       url: "https://pub.dev"
     source: hosted
-    version: "7.0.3"
+    version: "8.0.0"
   equatable:
     dependency: transitive
     description:
@@ -469,10 +469,10 @@ packages:
     dependency: transitive
     description:
       name: pool
-      sha256: "20fe868b6314b322ea036ba325e6fc0711a22948856475e2c2b6306e8ab39c2a"
+      sha256: "978783255c543aa3586a1b3c21f6e9d720eb315376a915872c61ef8b5c20177d"
       url: "https://pub.dev"
     source: hosted
-    version: "1.5.1"
+    version: "1.5.2"
   posix:
     dependency: "direct main"
     description:
@@ -501,10 +501,10 @@ packages:
     dependency: transitive
     description:
       name: pubspec_manager
-      sha256: "416609635f6c53ab759223ae66e71282e61a863c13ec47d60381e4b8046c2a71"
+      sha256: "48f425bb06cb38bb8bda84e70794cb373416033519668bcf481efbda1c10d9a1"
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.3"
+    version: "3.0.1"
   pubspec_parse:
     dependency: transitive
     description:
@@ -677,10 +677,10 @@ packages:
     dependency: transitive
     description:
       name: system_info2
-      sha256: "65206bbef475217008b5827374767550a5420ce70a04d2d7e94d1d2253f3efc9"
+      sha256: b937736ecfa63c45b10dde1ceb6bb30e5c0c340e14c441df024150679d65ac43
       url: "https://pub.dev"
     source: hosted
-    version: "4.0.0"
+    version: "4.1.0"
   term_glyph:
     dependency: transitive
     description:
@@ -757,10 +757,10 @@ packages:
     dependency: transitive
     description:
       name: watcher
-      sha256: "0b7fd4a0bbc4b92641dbf20adfd7e3fd1398fe17102d94b674234563e110088a"
+      sha256: "592ab6e2892f67760543fb712ff0177f4ec76c031f02f5b4ff8d3fc5eb9fb61a"
       url: "https://pub.dev"
     source: hosted
-    version: "1.1.2"
+    version: "1.1.4"
   web:
     dependency: transitive
     description:
@@ -797,10 +797,10 @@ packages:
     dependency: transitive
     description:
       name: win32
-      sha256: "66814138c3562338d05613a6e368ed8cfb237ad6d64a9e9334be3f309acfca03"
+      sha256: d7cb55e04cd34096cd3a79b3330245f54cb96a370a1c27adb3c84b917de8b08e
       url: "https://pub.dev"
     source: hosted
-    version: "5.14.0"
+    version: "5.15.0"
   yaml:
     dependency: transitive
     description:

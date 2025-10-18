@@ -33,31 +33,36 @@ class ShowProgress<I> extends Processor<I, I> {
   @override
   Future<void> addPlumbing() async {
     src.stream.listen((data) {
-      written += (data is List<int>) ? data.length : 1;
-      if (written > last + increment) {
-        var reported = false;
-        if (written ~/ increment > last) {
-          last = written ~/ increment;
-          callback(written, size);
-          reported = true;
-        }
-        if (written == size && !reported) {
-          callback(written, size);
-        }
+      // Always forward the chunk first
+      sinkController.sink.add(data);
 
-        sinkController.sink.add(data);
+      final inc = increment == 0 ? size : increment;
+      final delta = (data is List<int>) ? data.length : 1;
+      written += delta;
+
+      // Report when we cross the next increment boundary
+      if (written >= last + inc) {
+        last = (written ~/ inc) * inc;
+        callback(written, size);
+      } else if (written == size) {
+        callback(written, size);
       }
-    })
-      ..onDone(() {
-        // onError may already have called completed
-        if (!_done.isCompleted) {
-          _done.complete();
-        }
-      })
-      ..onError(_done.completeError);
+    }, onDone: () {
+      if (!_done.isCompleted) {
+        _done.complete();
+      }
+    }, onError: (Object e, StackTrace st) {
+      if (!_done.isCompleted) {
+        _done.completeError(e, st);
+      }
+    });
 
-    // write [srcErr] directly to [sinkErr]
-    srcErr.stream.listen((line) => sinkErrController.sink.add(line));
+    // pass-through stderr
+    srcErr.stream.listen(
+      sinkErrController.sink.add,
+      onError: (Object e, StackTrace st) =>
+          sinkErrController.sink.addError(e, st),
+    );
   }
 
   @override

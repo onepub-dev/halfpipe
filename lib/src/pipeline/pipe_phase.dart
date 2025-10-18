@@ -89,6 +89,22 @@ class PipePhase<T> {
     return _changeType<List<int>>(this);
   }
 
+  //  /// Tee stdout bytes to stderr/stdout without transforming to lines.
+  // PipePhase<List<int>> teeBytes({
+  //   bool toStdout = false,
+  //   bool toStderr = true,
+  // }) =>
+  //     block<List<int>>((plumb) async {
+  //       if (toStdout) {
+  //         plumb.src.listen((data) => stdout.add(data));
+  //       } else {
+  //         plumb.src.listen((_) {}); // drain
+  //       }
+  //       if (toStderr) {
+  //         await plumb.sinkErr.addStream(plumb.srcErr);
+  //       }
+  //     });
+
   /// Defines a block of dart code that is called as
   /// part of the pipeline.
   /// ```dart
