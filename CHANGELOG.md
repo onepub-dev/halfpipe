@@ -1,3 +1,7 @@
+# 1.1.0
+- upgrade to dcli 8.1
+- upgraded lint_hard and applied new lints.
+
 # 1.0.3
 - upgraded dcli dependencies.
 

@@ -432,7 +432,7 @@ class PipePhase<T> {
             /// pipeline and clean up.
             await section.done;
           }
-          // we need to reprot all errors.
+          // we need to report all errors.
           // ignore: avoid_catches_without_on_clauses
         } catch (e, st) {
           firstException = e;
