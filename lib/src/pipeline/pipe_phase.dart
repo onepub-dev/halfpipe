@@ -50,42 +50,55 @@ class PipePhase<T> {
   /// these two controllers.
   final sinkErrController = StreamControllerEx<T>(debugName: 'final err');
 
-  final dummyStdErr =
-      StreamControllerEx<List<int>>(debugName: 'dummy stdin - error channel');
+  final dummyStdErr = StreamControllerEx<List<int>>(
+    debugName: 'dummy stdin - error channel',
+  );
 
   PipePhase(this._halfPipe2);
 
-  PipePhase<List<int>> command(String commandLine,
-      {bool runInShell = false,
-      bool detached = false,
-      bool terminal = false,
-      bool extensionSearch = true,
-      String? workingDirectory}) {
-    sections.add(CommandPipeSection.commandLine(commandLine,
+  PipePhase<List<int>> command(
+    String commandLine, {
+    bool runInShell = false,
+    bool detached = false,
+    bool terminal = false,
+    bool extensionSearch = true,
+    String? workingDirectory,
+  }) {
+    sections.add(
+      CommandPipeSection.commandLine(
+        commandLine,
         runInShell: runInShell,
         detached: detached,
         terminal: terminal,
         extensionSearch: extensionSearch,
-        workingDirectory: workingDirectory));
+        workingDirectory: workingDirectory,
+      ),
+    );
     return _changeType<List<int>>(this);
   }
 
-  PipePhase<List<int>> commandAndArgs(String command,
-      {List<String>? args,
-      bool runInShell = false,
-      bool detached = false,
-      bool terminal = false,
-      bool nothrow = false,
-      bool extensionSearch = true,
-      String? workingDirectory}) {
-    sections.add(CommandPipeSection.withArgList(command,
+  PipePhase<List<int>> commandAndArgs(
+    String command, {
+    List<String>? args,
+    bool runInShell = false,
+    bool detached = false,
+    bool terminal = false,
+    bool nothrow = false,
+    bool extensionSearch = true,
+    String? workingDirectory,
+  }) {
+    sections.add(
+      CommandPipeSection.withArgList(
+        command,
         args: args,
         runInShell: runInShell,
         detached: detached,
         terminal: terminal,
         nothrow: nothrow,
         extensionSearch: extensionSearch,
-        workingDirectory: workingDirectory));
+        workingDirectory: workingDirectory,
+      ),
+    );
     return _changeType<List<int>>(this);
   }
 
@@ -118,8 +131,10 @@ class PipePhase<T> {
   ///    }
   ///  }).exitCode();
   /// ```
-  PipePhase<O> block<O>(BlockPlumber<T, O> plumber,
-      [Future<void> Function()? run]) {
+  PipePhase<O> block<O>(
+    BlockPlumber<T, O> plumber, [
+    Future<void> Function()? run,
+  ]) {
     sections.add(BlockPipeSection<T, O>(plumber: plumber, run: run));
 
     return _changeType<O>(this);
@@ -181,14 +196,56 @@ class PipePhase<T> {
   /// ```dart
   /// .redirectStdout(Redirect.toStderr)
   /// ```
-  PipePhase<T> redirectStdout(Redirect redirect) => this;
+  PipePhase<T> redirectStdout(Redirect redirect) {
+    if (redirect == Redirect.toStdout) {
+      return this;
+    }
+
+    sections.add(
+      BlockPipeSection<T, T>(
+        plumber: (plumbing) async {
+          plumbing.src.listen((data) {
+            if (redirect == Redirect.toStderr) {
+              plumbing.sinkErr.add(data);
+            }
+          }, onError: plumbing.sinkErr.addError);
+          plumbing.srcErr.listen(
+            plumbing.sinkErr.add,
+            onError: plumbing.sinkErr.addError,
+          );
+        },
+      ),
+    );
+    return this;
+  }
 
   /// Redirect stderr from the prior processor to stdout or /dev/null.
   /// to the other stream.
   /// ```dart
   /// .redirectStderr(Redirect.toStdout)
   /// ```
-  PipePhase<T> redirectStderr(Redirect redirect) => this;
+  PipePhase<T> redirectStderr(Redirect redirect) {
+    if (redirect == Redirect.toStderr) {
+      return this;
+    }
+
+    sections.add(
+      BlockPipeSection<T, T>(
+        plumber: (plumbing) async {
+          plumbing.src.listen(
+            plumbing.sink.add,
+            onError: plumbing.sinkErr.addError,
+          );
+          plumbing.srcErr.listen((data) {
+            if (redirect == Redirect.toStdout) {
+              plumbing.sink.add(data);
+            }
+          }, onError: plumbing.sinkErr.addError);
+        },
+      ),
+    );
+    return this;
+  }
 
   //////////////////////////////////////////////////////
   // The following are terminal functions
@@ -203,11 +260,12 @@ class PipePhase<T> {
   /// If the list exceeds [maxBuffer] then any further
   /// data will be dropped - so essentially a 'head' command.
   /// Runs the pipeline outputting the results to a list.
-  Future<CaptureMixed<T>> captureMixed(
-      {int maxBuffer = 10000,
-      CaptureMode captureMode = CaptureMode.head,
-      bool captureOut = true,
-      bool captureErr = true}) async {
+  Future<CaptureMixed<T>> captureMixed({
+    int maxBuffer = 10000,
+    CaptureMode captureMode = CaptureMode.head,
+    bool captureOut = true,
+    bool captureErr = true,
+  }) async {
     final capture = CaptureMixed<T>();
 
     if (captureOut) {
@@ -244,11 +302,12 @@ class PipePhase<T> {
   /// [CaptureBoth] otherwise the exitCode is set to zero.
   /// The [captureMode] controls whether the fist [maxBuffer] elements (head)
   /// or the last [maxBuffer] elements (tail) are returned.
-  Future<CaptureBoth<T>> captureBoth(
-      {int maxBuffer = 10000,
-      CaptureMode captureMode = CaptureMode.tail,
-      bool captureOut = true,
-      bool captureErr = true}) async {
+  Future<CaptureBoth<T>> captureBoth({
+    int maxBuffer = 10000,
+    CaptureMode captureMode = CaptureMode.tail,
+    bool captureOut = true,
+    bool captureErr = true,
+  }) async {
     final capture = CaptureBoth<T>();
 
     if (captureOut) {
@@ -273,9 +332,10 @@ class PipePhase<T> {
   /// [CaptureOut] otherwise the exitCode is set to zero.
   /// The [captureMode] controls whether the fist [maxBuffer] elements (head)
   /// or the last [maxBuffer] elements (tail) are returned.
-  core.Future<CaptureOut<T>> captureOut(
-      {int maxBuffer = 10000,
-      CaptureMode captureMode = CaptureMode.tail}) async {
+  core.Future<CaptureOut<T>> captureOut({
+    int maxBuffer = 10000,
+    CaptureMode captureMode = CaptureMode.tail,
+  }) async {
     final capture = CaptureOut<T>();
     _capture(sinkOutController, capture.out, maxBuffer, captureMode);
     await _run();
@@ -290,9 +350,10 @@ class PipePhase<T> {
   /// [CaptureOut] otherwise the exitCode is set to zero.
   /// The [captureMode] controls whether the fist [maxBuffer] elements (head)
   /// or the last [maxBuffer] elements (tail) are returned.
-  Future<CaptureErr<T>> captureErr(
-      {int maxBuffer = 10000,
-      CaptureMode captureMode = CaptureMode.tail}) async {
+  Future<CaptureErr<T>> captureErr({
+    int maxBuffer = 10000,
+    CaptureMode captureMode = CaptureMode.tail,
+  }) async {
     final capture = CaptureErr<T>();
     _capture(sinkErrController, capture.err, maxBuffer, captureMode);
 
@@ -301,8 +362,12 @@ class PipePhase<T> {
   }
 
   // captures data from the [controller]'s stram placing it in the [list]
-  void _capture(StreamControllerEx<T> controller, List<T> list, int maxBuffer,
-      CaptureMode captureMode) {
+  void _capture(
+    StreamControllerEx<T> controller,
+    List<T> list,
+    int maxBuffer,
+    CaptureMode captureMode,
+  ) {
     final stream = controller.stream;
     stream.cast<T>().listen((data) {
       if (list.length < maxBuffer) {
@@ -322,22 +387,30 @@ class PipePhase<T> {
   /// list in the order the pipeline outputs them.
   /// If any of the [PipeSection]s returns an non-zero exit code then an
   /// exception is thrown.
-  Future<List<T>> tail(int n,
-          {bool captureOut = true, bool captureErr = false}) async =>
-      (await captureMixed(
-              maxBuffer: n, captureErr: captureErr, captureOut: captureOut))
-          .mixed;
+  Future<List<T>> tail(
+    int n, {
+    bool captureOut = true,
+    bool captureErr = false,
+  }) async => (await captureMixed(
+    maxBuffer: n,
+    captureErr: captureErr,
+    captureOut: captureOut,
+  )).mixed;
 
   /// Runs the pipeline returning the fist [n] lines of the output.
   /// This is actually the default mode of [captureOut] but we include
   /// this method for symmetry with the tail method.
   /// If any of the [PipeSection]s returns an non-zero exit code then an
   /// exception is thrown.
-  Future<List<T>> head(int n,
-          {bool captureOut = true, bool captureErr = false}) async =>
-      (await captureMixed(
-              maxBuffer: n, captureErr: captureErr, captureOut: captureOut))
-          .mixed;
+  Future<List<T>> head(
+    int n, {
+    bool captureOut = true,
+    bool captureErr = false,
+  }) async => (await captureMixed(
+    maxBuffer: n,
+    captureErr: captureErr,
+    captureOut: captureOut,
+  )).mixed;
 
   /// Runs the pipeline printing the out stream to stdout and the
   /// err stream to stderr.
@@ -347,18 +420,34 @@ class PipePhase<T> {
   /// If one of the [PipeSection]s runs a Command then exit code from the
   /// last one is returned otherwise 0 is returned.
   Future<int> printmix({bool showStdout = true, bool showStderr = true}) {
+    // Discard suppressed bytes before line conversion can buffer a long line.
+    if (!showStdout) {
+      redirectStdout(Redirect.toDevNull);
+    }
+    if (!showStderr) {
+      redirectStderr(Redirect.toDevNull);
+    }
+
     if (T == List<int>) {
       sections.add(TransformerPipeSection<List<int>, String>(Transform.line));
     }
 
-    sections.add(BlockPipeSection(plumber: (plumbing) async {
-      if (showStdout) {
-        plumbing.src.listen(core.print);
-      }
-      if (showStderr) {
-        plumbing.srcErr.listen((data) => io.stderr.write(data));
-      }
-    }));
+    sections.add(
+      BlockPipeSection(
+        plumber: (plumbing) async {
+          plumbing.src.listen((data) {
+            if (showStdout) {
+              core.print(data);
+            }
+          });
+          plumbing.srcErr.listen((data) {
+            if (showStderr) {
+              io.stderr.write(data);
+            }
+          });
+        },
+      ),
+    );
 
     return _run();
   }
@@ -386,8 +475,9 @@ class PipePhase<T> {
     Object? firstException;
     StackTrace? firstStackTrace;
 
-    await withStdin(debugName: 'stdin of main process',
-        (stdinController) async {
+    await withStdin(debugName: 'stdin of main process', (
+      stdinController,
+    ) async {
       /// Wire the process's stdin as the first
       /// section's input
       StreamControllerEx<dynamic> priorOutController = stdinController;
@@ -398,10 +488,7 @@ class PipePhase<T> {
 
       // wire each section running
       for (final section in sections) {
-        await section.initStreams(
-          priorOutController,
-          priorErrController,
-        );
+        await section.initStreams(priorOutController, priorErrController);
 
         await section.addPlumbing();
 
@@ -411,35 +498,85 @@ class PipePhase<T> {
 
       /// Wire up the final section's output and error
       /// streams to the final sinks.
-      priorOutController.stream
-          .listen((data) => sinkOutController.add(data as T));
-      priorErrController.stream
-          .listen((data) => sinkErrController.add(data as T));
+      priorOutController.stream.listen((data) {
+        if (sinkOutController.hasListener) {
+          sinkOutController.add(data as T);
+        }
+      });
+      priorErrController.stream.listen((data) {
+        if (sinkErrController.hasListener) {
+          sinkErrController.add(data as T);
+        }
+      });
 
-      // start each section running
+      // Attach error handlers as each section starts. A later section can fail
+      // while an earlier one is still running, before we reach it below.
+      final results = <Future<({Object? error, StackTrace? stackTrace})>>[];
+      final failure = Completer<({Object? error, StackTrace? stackTrace})>();
       for (final section in sections) {
         section.done = section.start();
+        results.add(
+          section.done.then(
+            (_) => (error: null, stackTrace: null),
+            onError: (Object error, StackTrace stackTrace) {
+              final result = (error: error, stackTrace: stackTrace);
+              if (!failure.isCompleted) {
+                failure.complete(result);
+              }
+              return result;
+            },
+          ),
+        );
       }
 
       /// Wait for all sections to complete.
-      for (final section in sections) {
+      var aborted = false;
+      for (var index = 0; index < sections.length; index++) {
+        final section = sections[index];
         log.fine(() => 'waiting for section: ${section.debugName} to complete');
 
         try {
           if (firstException == null) {
-            /// As soon as one section throws we stop waiting on
-            /// subsequent sections as we need to shut down the
-            /// pipeline and clean up.
-            await section.done;
+            final observed = await Future.any([results[index], failure.future]);
+            if (observed.error != null) {
+              firstException = observed.error;
+              firstStackTrace = observed.stackTrace;
+            }
+          }
+          if (firstException != null && !aborted) {
+            aborted = true;
+            await Future.wait(
+              sections.whereType<CommandPipeSection<dynamic>>().map(
+                (command) => command.abort(),
+              ),
+            );
+          }
+          if (aborted) {
+            // Custom sections may still be active; do not let them suppress
+            // the original error indefinitely after command cancellation.
+            await results[index].timeout(
+              const Duration(seconds: 1),
+              onTimeout: () => (error: null, stackTrace: null),
+            );
           }
           // we need to report all errors.
           // ignore: avoid_catches_without_on_clauses
         } catch (e, st) {
-          firstException = e;
-          firstStackTrace = st;
+          firstException ??= e;
+          firstStackTrace ??= st;
         }
         log.fine(() => 'section ${section.debugName} completed');
-        await section.close();
+        try {
+          final close = section.close();
+          if (aborted) {
+            await close.timeout(const Duration(seconds: 1));
+          } else {
+            await close;
+          }
+        } on Object catch (e, st) {
+          firstException ??= e;
+          firstStackTrace ??= st;
+        }
       }
 
       await Future.delayed(Duration.zero, () {});

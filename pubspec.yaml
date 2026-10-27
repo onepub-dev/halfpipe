@@ -2,26 +2,26 @@ name: halfpipe
 description: |-
   Create processing pipe lines by combining calls to external command
   line apps and dart code
-version: 1.1.0
+version: 2.0.0
 repository: https://github.com/onepub-dev/halfpipe
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: '>=3.10.1 <4.0.0'
 
 
 dependencies:
   args: ^2.5.0
   async: ^2.11.0
   completer_ex: ^4.0.2
-  dcli: ^8.1.0
-  dcli_common: ^8.0.0
-  dcli_core: ^8.0.0
+  dcli: ^10.4.3
+  dcli_common: ^10.4.0
+  dcli_core: ^10.4.0
   file: ^7.0.0
   glob: ^2.1.2
   logging: ^1.2.0
   meta: ^1.15.0
   path: ^1.8.3
-  posix: ^6.0.0
+  posix: ^6.5.3
   stack_trace: ^1.11.1
 
 dev_dependencies:

@@ -27,33 +27,35 @@ class HalfPipe {
     bool terminal = false,
     bool extensionSearch = true,
     String? workingDirectory,
-  }) =>
-      initialPipePhase.command(
-        commandLine,
-        runInShell: runInShell,
-        detached: detached,
-        terminal: terminal,
-        extensionSearch: extensionSearch,
-        workingDirectory: workingDirectory,
-      );
+  }) => initialPipePhase.command(
+    commandLine,
+    runInShell: runInShell,
+    detached: detached,
+    terminal: terminal,
+    extensionSearch: extensionSearch,
+    workingDirectory: workingDirectory,
+  );
 
-  PipePhase<List<int>> commandAndArgs(String command,
-          {List<String>? args,
-          bool runInShell = false,
-          bool detached = false,
-          bool terminal = false,
-          bool nothrow = false,
-          bool extensionSearch = true,
-          String? workingDirectory}) =>
-      initialPipePhase.commandAndArgs(
-        command,
-        args: args,
-        runInShell: runInShell,
-        detached: detached,
-        terminal: terminal,
-        extensionSearch: extensionSearch,
-        workingDirectory: workingDirectory,
-      );
+  /// Runs [command] with [args] passed literally to the process.
+  /// Use [HalfPipe.command] for a shell-like command line with glob expansion.
+  PipePhase<List<int>> commandAndArgs(
+    String command, {
+    List<String>? args,
+    bool runInShell = false,
+    bool detached = false,
+    bool terminal = false,
+    bool nothrow = false,
+    bool extensionSearch = true,
+    String? workingDirectory,
+  }) => initialPipePhase.commandAndArgs(
+    command,
+    args: args,
+    runInShell: runInShell,
+    detached: detached,
+    terminal: terminal,
+    extensionSearch: extensionSearch,
+    workingDirectory: workingDirectory,
+  );
 
   PipePhase<O> block<O>(BlockPlumber<List<int>, O> plumber) =>
       initialPipePhase.block<O>(plumber);

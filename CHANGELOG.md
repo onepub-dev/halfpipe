@@ -1,3 +1,12 @@
+# 2.0.0
+- **Breaking:** `commandAndArgs` now passes every argument literally. Use
+  `command` for shell-like glob expansion.
+- Make stdout and stderr redirection actually suppress or forward output as requested.
+- Drain uncaptured output instead of retaining it in memory.
+- Respect environment variables removed from the child-process environment.
+- Decode UTF-8 lines incrementally and return malformed-input errors through the pipeline future.
+- Require patched DCLI 10.4.3 and POSIX 6.5.3; minimum Dart SDK is now 3.10.1.
+
 # 1.1.0
 - upgrade to dcli 8.1
 - upgraded lint_hard and applied new lints.

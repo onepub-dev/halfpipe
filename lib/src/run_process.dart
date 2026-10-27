@@ -26,28 +26,33 @@ class RunProcess {
 
   Process? _process;
 
-  RunProcess.commandLine(String commandLine,
-      {required this.runInShell,
-      required this.detached,
-      required this.terminal,
-      required this.nothrow,
-      required this.extensionSearch,
-      String? workingDirectory})
-      : workingDirectory = workingDirectory ?? pwd {
+  RunProcess.commandLine(
+    String commandLine, {
+    required this.runInShell,
+    required this.detached,
+    required this.terminal,
+    required this.nothrow,
+    required this.extensionSearch,
+    String? workingDirectory,
+  }) : workingDirectory = workingDirectory ?? pwd {
     _parsed = ParsedCliCommand(commandLine, workingDirectory);
   }
 
-  RunProcess.withArgList(String command,
-      {required this.runInShell,
-      required this.detached,
-      required this.terminal,
-      required this.nothrow,
-      required this.extensionSearch,
-      List<String>? args,
-      String? workingDirectory})
-      : workingDirectory = workingDirectory ?? pwd {
-    _parsed =
-        ParsedCliCommand.fromArgList(command, args ?? [], workingDirectory);
+  RunProcess.withArgList(
+    String command, {
+    required this.runInShell,
+    required this.detached,
+    required this.terminal,
+    required this.nothrow,
+    required this.extensionSearch,
+    List<String>? args,
+    String? workingDirectory,
+  }) : workingDirectory = workingDirectory ?? pwd {
+    _parsed = ParsedCliCommand.fromArgList(
+      command,
+      args ?? [],
+      workingDirectory,
+    );
   }
 
   Stream<List<int>> get stdout {
@@ -57,7 +62,8 @@ class RunProcess {
 
     if (terminal) {
       throw StateError(
-          '''When `terminal` is true, the process does not have its own stdout but is directly attached to the terminals stdout''');
+        '''When `terminal` is true, the process does not have its own stdout but is directly attached to the terminals stdout''',
+      );
     }
     return _process!.stdout;
   }
@@ -76,7 +82,8 @@ class RunProcess {
 
     if (terminal) {
       throw StateError(
-          '''When `terminal` is true, the process does not have its own stdin but is directly attached to the terminals stdin''');
+        '''When `terminal` is true, the process does not have its own stdin but is directly attached to the terminals stdin''',
+      );
     }
 
     return _process!.stdin;
@@ -90,6 +97,9 @@ class RunProcess {
     return _process!.exitCode;
   }
 
+  /// Stops a process that has already started.
+  bool kill() => _process?.kill(ProcessSignal.sigkill) ?? false;
+
   Future<void> start() async {
     assert(
       !(terminal && detached),
@@ -102,15 +112,18 @@ class RunProcess {
     }
 
     if (Settings().isWindows && extensionSearch) {
-      _parsed.cmd =
-          await searchForCommandExtension(_parsed.cmd, workingDirectory);
+      _parsed.cmd = await searchForCommandExtension(
+        _parsed.cmd,
+        workingDirectory,
+      );
     }
 
     if (Settings().isVerbose) {
       final cmdLine = "${_parsed.cmd} ${_parsed.args.join(' ')}";
       verbose(() => 'Process.start: cmdLine $cmdLine');
       verbose(
-        () => 'Process.start: runInShell: $runInShell '
+        () =>
+            'Process.start: runInShell: $runInShell '
             'workingDir: $workingDirectory mode: $mode '
             'cmd: ${_parsed.cmd} args: ${_parsed.args.join(', ')}',
       );
@@ -132,8 +145,9 @@ class RunProcess {
         workingDirectory: workingDirectory,
         mode: mode,
         environment: envs,
+        includeParentEnvironment: false,
       );
-    } on ProcessException catch (ep, _) {
+    } on ProcessException catch (ep) {
       if (Platform.isWindows && ep.errorCode == 193) {
         throw CommandException.withArgs(
           ep.executable,

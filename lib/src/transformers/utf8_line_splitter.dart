@@ -1,7 +1,5 @@
 import 'dart:convert';
 
-import 'package:logging/logging.dart';
-
 class Utf8LineSplitter extends Converter<List<int>, String> {
   final _utf8Decoder = const Utf8Decoder();
   final _lineSplitter = const LineSplitter();
@@ -14,57 +12,6 @@ class Utf8LineSplitter extends Converter<List<int>, String> {
   }
 
   @override
-  Sink<List<int>> startChunkedConversion(Sink<String> sink) =>
-      _Utf8LineSplitterSink(sink, _utf8Decoder, _lineSplitter);
-}
-
-class _Utf8LineSplitterSink implements Sink<List<int>> {
-  final Sink<String> _outputSink;
-
-  final Utf8Decoder _utf8Decoder;
-
-  final LineSplitter _lineSplitter;
-
-  var _carry = '';
-
-  final log = Logger('Utf8LineSplitterSink');
-
-  _Utf8LineSplitterSink(
-      this._outputSink, this._utf8Decoder, this._lineSplitter);
-
-  @override
-  void add(List<int> chunk) {
-    final decodedString = _carry + _utf8Decoder.convert(chunk);
-    final lines = _lineSplitter.convert(decodedString);
-
-    /// To handle lines that continue over to the
-    /// next chunk, we need to keep the last line
-    /// in the [_carry] buffer.
-    for (var i = 0; i < lines.length - 1; i++) {
-      _outputSink.add(lines[i]);
-      log.fine(() => 'Adding line: ${lines[i]}');
-    }
-
-    if (decodedString.endsWith('\n')) {
-      final line = lines.last;
-      _outputSink.add(line);
-      log.fine(() => 'Adding line: $line');
-      _carry = '';
-    } else {
-      _carry = lines.isNotEmpty ? lines.last : '';
-    }
-
-    log.fine(() => '_carry line: $_carry');
-  }
-
-  @override
-  void close() {
-    log.fine(() => 'close called on LineSplitter');
-    if (_carry.isNotEmpty) {
-      _outputSink.add(_carry);
-      log.fine(() => '_carry line on close: $_carry');
-      _carry = '';
-    }
-    _outputSink.close();
-  }
+  Sink<List<int>> startChunkedConversion(Sink<String> sink) => _utf8Decoder
+      .startChunkedConversion(_lineSplitter.startChunkedConversion(sink));
 }

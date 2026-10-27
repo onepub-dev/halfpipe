@@ -36,8 +36,8 @@ class ParsedCliCommand {
     args = _expandGlobs(qargs, workingDirectory);
   }
 
-  /// when passed individual args we respect any quotes that are
-  /// passed as they have been put there with intent.
+  /// Passes an explicit argument list to the process without shell-like
+  /// trimming, quote removal, tilde substitution, or glob expansion.
   ParsedCliCommand.fromArgList(
     this.cmd,
     List<String> rawArgs,
@@ -52,8 +52,7 @@ class ParsedCliCommand {
       );
     }
 
-    final qargs = QArg.translate(rawArgs);
-    args = _expandGlobs(qargs, workingDirectory);
+    args = List<String>.of(rawArgs);
   }
 
   /// parses the given command breaking them done into words
@@ -245,7 +244,10 @@ class ParsedCliCommand {
 
     if (parts.isEmpty) {
       throw CommandException(
-          commandLine, -1, 'The string did not contain a command.');
+        commandLine,
+        -1,
+        'The string did not contain a command.',
+      );
     }
     cmd = parts[0].arg;
 
@@ -293,7 +295,7 @@ enum _ParseState {
   inWord,
 
   /// The next character is to be treated litterally
-  escaped
+  escaped,
 }
 
 class _ParseFrame {
@@ -313,10 +315,12 @@ class _ParseFrame {
 
   /// Create a [_ParseFrame] when we enter the [_ParseState.inQuote] state.
   _ParseFrame.forQuote(
-      StackList<_ParseFrame> stack, this.offset, this.matchingQuote)
-      : state = isQuoteActive(stack)
-            ? _ParseState.nestedQuote
-            : _ParseState.inQuote;
+    StackList<_ParseFrame> stack,
+    this.offset,
+    this.matchingQuote,
+  ) : state = isQuoteActive(stack)
+          ? _ParseState.nestedQuote
+          : _ParseState.inQuote;
 
   @override
   String toString() => '${state.name} offset: $offset quote: $matchingQuote';
